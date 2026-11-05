@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Keep managed email templates and their server-only sender in `src/lib/email-templates`; the authenticated `/lovable/email/transactional/preview` route supports the Emails dashboard without exposing a send endpoint.
+- Keep server environment loading out of client defines and alias React Email's entities imports to the hoisted v4 copy so email rendering bundles safely.
