@@ -4,7 +4,7 @@
  */
 export const ANALYTICS = {
   /** Google Analytics 4 measurement ID, e.g. "G-ABC123XYZ" */
-  ga4: "",
+  ga4: "G-K4EE97JPL3",
   /** Microsoft Clarity project ID (heatmaps + session replays), e.g. "abcd1234ef" */
   clarity: "",
   /** Meta (Facebook) Pixel ID, e.g. "123456789012345" */

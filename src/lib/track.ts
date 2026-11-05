@@ -85,12 +85,27 @@ export function track(event: string, label?: string, meta?: Record<string, unkno
     if (event !== "page_view") {
       window.gtag?.("event", event, { event_label: label, ...meta });
     }
-    if (event === "booking_submit" || event === "walkthrough_submit") window.fbq?.("track", "Lead");
+    // Every form that hands us a phone number counts as a lead (GA4 "generate_lead", Pixel "Lead").
+    if (LEAD_EVENTS.has(event)) {
+      const value = typeof meta?.["total"] === "number" ? (meta["total"] as number) : undefined;
+      window.gtag?.("event", "generate_lead", {
+        lead_source: event,
+        ...(value ? { value, currency: "USD" } : {}),
+      });
+      window.fbq?.("track", "Lead");
+    }
     if (event === "call_click") window.fbq?.("track", "Contact");
   } catch {
     /* ignore */
   }
 }
+
+const LEAD_EVENTS = new Set([
+  "booking_submit",
+  "walkthrough_submit",
+  "quick_lead_submit",
+  "quote_accept",
+]);
 
 let loaded = false;
 
