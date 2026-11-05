@@ -1,8 +1,15 @@
 /*
- * Email through Resend. Server-only: call from createServerFn handlers.
- * Secrets: RESEND_API_KEY, FROM_EMAIL, NOTIFY_EMAILS (comma-separated alert recipients).
+ * Email through Lovable's built-in app emails. Server-only: call from createServerFn handlers.
+ * Sends from the verified domain simplesurfacecarpetcleaning.com; delivery, retries,
+ * rate limits, suppression and unsubscribe handling are managed by Lovable.
+ * Secrets: NOTIFY_EMAILS (comma-separated alert recipients). LOVABLE_API_KEY is automatic.
  */
+import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
+
 export const BUSINESS_INBOX = "simplesurfacellc@gmail.com";
+export const SENDER_DOMAIN = "simplesurfacecarpetcleaning.com";
+export const SENDER_NAME = "Simple Surface Carpet Cleaning";
+export const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`;
 
 export type SendResult = { ok: true } | { ok: false; error: string };
 
