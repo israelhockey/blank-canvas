@@ -19,7 +19,6 @@ import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
 import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
-import { Route as ApiTestEmailRouteImport } from './routes/api/test-email'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
 import { Route as QuoteTokenRouteImport } from './routes/quote.$token'
 import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
@@ -77,11 +76,6 @@ const AdminStatsRoute = AdminStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiTestEmailRoute = ApiTestEmailRouteImport.update({
-  id: '/api/test-email',
-  path: '/api/test-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CarpetCleaningCityRoute = CarpetCleaningCityRouteImport.update({
   id: '/carpet-cleaning/$city',
   path: '/carpet-cleaning/$city',
@@ -123,7 +117,6 @@ export interface FileRoutesByFullPath {
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
-  '/api/test-email': typeof ApiTestEmailRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -141,7 +134,6 @@ export interface FileRoutesByTo {
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
-  '/api/test-email': typeof ApiTestEmailRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin': typeof AdminIndexRoute
@@ -161,7 +153,6 @@ export interface FileRoutesById {
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
-  '/api/test-email': typeof ApiTestEmailRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -182,7 +173,6 @@ export interface FileRouteTypes {
     | '/admin/pipeline'
     | '/admin/settings'
     | '/admin/stats'
-    | '/api/test-email'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin/'
@@ -200,7 +190,6 @@ export interface FileRouteTypes {
     | '/admin/pipeline'
     | '/admin/settings'
     | '/admin/stats'
-    | '/api/test-email'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin'
@@ -219,7 +208,6 @@ export interface FileRouteTypes {
     | '/admin/pipeline'
     | '/admin/settings'
     | '/admin/stats'
-    | '/api/test-email'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin/'
@@ -233,7 +221,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  ApiTestEmailRoute: typeof ApiTestEmailRoute
   CarpetCleaningCityRoute: typeof CarpetCleaningCityRoute
   QuoteTokenRoute: typeof QuoteTokenRoute
 }
@@ -309,13 +296,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/stats'
       preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/api/test-email': {
-      id: '/api/test-email'
-      path: '/api/test-email'
-      fullPath: '/api/test-email'
-      preLoaderRoute: typeof ApiTestEmailRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/carpet-cleaning/$city': {
       id: '/carpet-cleaning/$city'
@@ -396,7 +376,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  ApiTestEmailRoute: ApiTestEmailRoute,
   CarpetCleaningCityRoute: CarpetCleaningCityRoute,
   QuoteTokenRoute: QuoteTokenRoute,
 }
