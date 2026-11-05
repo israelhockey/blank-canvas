@@ -20,7 +20,6 @@ export default defineConfig({
       alias: {
         "entities/lib/decode.js": fileURLToPath(new URL("./node_modules/entities/lib/decode.js", import.meta.url)),
         "entities/lib/encode.js": fileURLToPath(new URL("./node_modules/entities/lib/encode.js", import.meta.url)),
-        entities: fileURLToPath(new URL("./node_modules/entities", import.meta.url)),
       },
     },
   },
