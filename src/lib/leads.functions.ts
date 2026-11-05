@@ -18,7 +18,7 @@ import {
  * Public website forms: booking and commercial walkthrough requests.
  * The form also saves itself to the database (submit_lead); these functions send the emails:
  *   - an instant alert to the team (NOTIFY_EMAILS)
- *   - a branded confirmation to the customer, once FROM_EMAIL is on a verified domain
+ *   - a branded confirmation to the customer, sent from our verified domain
  */
 
 const phone = z

@@ -1,8 +1,15 @@
 /*
- * Email through Resend. Server-only: call from createServerFn handlers.
- * Secrets: RESEND_API_KEY, FROM_EMAIL, NOTIFY_EMAILS (comma-separated alert recipients).
+ * Email through Lovable's built-in app emails. Server-only: call from createServerFn handlers.
+ * Sends from the verified domain simplesurfacecarpetcleaning.com; delivery, retries,
+ * rate limits, suppression and unsubscribe handling are managed by Lovable.
+ * Secrets: NOTIFY_EMAILS (comma-separated alert recipients). LOVABLE_API_KEY is automatic.
  */
+import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
+
 export const BUSINESS_INBOX = "simplesurfacellc@gmail.com";
+export const SENDER_DOMAIN = "simplesurfacecarpetcleaning.com";
+export const SENDER_NAME = "Simple Surface Carpet Cleaning";
+export const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`;
 
 export type SendResult = { ok: true } | { ok: false; error: string };
 
@@ -22,10 +29,9 @@ export function notifyList(): string[] {
     .filter(Boolean);
 }
 
-/** True when FROM_EMAIL is a real verified sender (customer-facing mail needs this). */
+/** Customer-facing mail is always allowed: the sending domain is verified with Lovable. */
 export function canEmailCustomers(): boolean {
-  const from = process.env["FROM_EMAIL"] || "";
-  return Boolean(process.env["RESEND_API_KEY"] && from && !from.includes("resend.dev"));
+  return true;
 }
 
 export async function sendEmail(opts: {
@@ -35,29 +41,42 @@ export async function sendEmail(opts: {
   text: string;
   replyTo?: string | undefined;
 }): Promise<SendResult> {
-  const key = process.env["RESEND_API_KEY"];
-  if (!key) {
-    console.error("RESEND_API_KEY is not set");
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) {
+    console.error("LOVABLE_API_KEY is not set");
     return { ok: false, error: "not_configured" };
   }
-  const from = process.env["FROM_EMAIL"] || "Simple Surface <onboarding@resend.dev>";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
-    }),
-  });
-  if (!res.ok) {
-    console.error("Resend error", res.status, await res.text().catch(() => ""));
+  const [to, ...cc] = opts.to;
+  if (!to) {
+    console.error("sendEmail called with no recipients");
+    return { ok: false, error: "no_recipient" };
+  }
+  try {
+    await sendLovableEmail(
+      {
+        to,
+        ...(cc.length ? { cc: cc.slice(0, 4) } : {}),
+        from: { name: SENDER_NAME, address: FROM_ADDRESS },
+        sender_domain: SENDER_DOMAIN,
+        purpose: "transactional",
+        idempotency_key: crypto.randomUUID(),
+        subject: opts.subject,
+        html: opts.html,
+        text: opts.text,
+        // Customer replies land in the business inbox unless a caller says otherwise.
+        reply_to: opts.replyTo ?? BUSINESS_INBOX,
+      },
+      { apiKey },
+    );
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof EmailAPIError) {
+      console.error("Email API error", e.status, e.code ?? "", e.message);
+    } else {
+      console.error("Email send error", e);
+    }
     return { ok: false, error: "send_failed" };
   }
-  return { ok: true };
 }
 
 export function detailRows(pairs: [string, string][]) {
