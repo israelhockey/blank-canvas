@@ -37,7 +37,7 @@ export function QuickLead({ q }: { q: Quantities }) {
   const [mode, setMode] = useState<LeadMode>("quick");
   const [wants, setWants] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "failed">("idle");
-  const [err, setErr] = useState<{ name?: string; phone?: string }>({});
+  const [err, setErr] = useState<{ name?: string | undefined; phone?: string | undefined }>({});
   const [done, setDone] = useState({ first: "", phone: "", emailed: false, wa: "" });
   const isWa = mode === "whatsapp";
 
@@ -68,7 +68,11 @@ export function QuickLead({ q }: { q: Quantities }) {
     const honeypot = String(f.get("website") || "");
     const next: typeof err = {};
     if (name.length < 2) next.name = "Your first name is enough.";
-    if (phone.replace(/\D/g, "").length < 10) next.phone = "Enter a 10-digit mobile number.";
+    const digits = phone.replace(/\D/g, "").length;
+    if (digits < 10)
+      next.phone = digits
+        ? `That's ${digits} digits. Please enter all 10, like 817-555-0123.`
+        : "Enter your mobile number, like 817-555-0123.";
     setErr(next);
     if (next.name || next.phone) return;
 
@@ -242,6 +246,11 @@ export function QuickLead({ q }: { q: Quantities }) {
                 name="name"
                 autoComplete="given-name"
                 aria-invalid={!!err.name}
+                onInput={(e) =>
+                  err.name &&
+                  e.currentTarget.value.trim().length >= 2 &&
+                  setErr({ ...err, name: undefined })
+                }
               />
               <span className="err">{err.name}</span>
             </label>
@@ -255,6 +264,11 @@ export function QuickLead({ q }: { q: Quantities }) {
                 autoComplete="tel"
                 placeholder="817-555-0123"
                 aria-invalid={!!err.phone}
+                onInput={(e) =>
+                  err.phone &&
+                  e.currentTarget.value.replace(/\D/g, "").length >= 10 &&
+                  setErr({ ...err, phone: undefined })
+                }
               />
               <span className="err">{err.phone}</span>
             </label>
