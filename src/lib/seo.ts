@@ -8,7 +8,7 @@ export const SITE_URL: string = SITE_ORIGIN;
 const abs = (path: string) => (SITE_URL ? SITE_URL.replace(/\/$/, "") + path : path);
 
 export function pageMeta(opts: { title: string; description: string; path: string }) {
-  const image = abs("/og-image.jpg");
+  const image = abs("/og-image-v2.jpg");
   return {
     meta: [
       { title: opts.title },
@@ -46,7 +46,7 @@ export function businessJsonLd(city?: City) {
       : "Simple Surface Carpet Cleaning provides low-moisture carpet, tile, upholstery and rug cleaning for homes and businesses in Fort Worth and Tarrant County, TX. Plugs into a standard outlet, no hoses through your door, dry in hours.",
     telephone: "+1-214-562-3449",
     email: BUSINESS.email,
-    image: abs("/og-image.jpg"),
+    image: abs("/og-image-v2.jpg"),
     logo: abs("/brand/logo-full.png"),
     url: abs(city ? `/carpet-cleaning/${cityParam(city)}` : "/"),
     priceRange: "$$",

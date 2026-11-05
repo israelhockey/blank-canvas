@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#0f1f38" },
       { property: "og:site_name", content: "Simple Surface Carpet Cleaning" },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://simplesurfacecarpetcleaning.com/og-image.jpg" },
+      { property: "og:image", content: "https://simplesurfacecarpetcleaning.com/og-image-v2.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
