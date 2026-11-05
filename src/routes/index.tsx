@@ -1,23 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { SitePage } from "@/components/site/SitePage";
+import { businessJsonLd, pageMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    ...pageMeta({
+      title: "Simple Surface | Carpet & Upholstery Cleaning in Fort Worth, TX",
+      description:
+        "Low-moisture carpet, tile, upholstery and rug cleaning in Fort Worth. Plugs into a standard outlet, no hoses through your door, dry in hours. Flat $50 per room, no deposit.",
+      path: "/",
+    }),
+    scripts: businessJsonLd(),
+  }),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+function Home() {
+  return <SitePage />;
 }
