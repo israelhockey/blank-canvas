@@ -8,6 +8,13 @@
       "when": 1793896104199,
       "tag": "0000_backend_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793896482606,
+      "tag": "0001_table_grants",
+      "breakpoints": true
     }
   ]
 }
