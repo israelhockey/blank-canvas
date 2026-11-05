@@ -4,10 +4,10 @@ import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { runAutomations } from "@/lib/automations.server";
 
 /*
- * Automatic customer emails. Lovable runs this every hour (scheduled job with the
+ * Automatic customer emails at /api/public/automations. Lovable runs this every hour (scheduled job with the
  * LOVABLE_CRON_SECRET bearer token). Each email is sent once and saved to the customer's history.
  */
-export const Route = createFileRoute("/api/automations")({
+export const Route = createFileRoute("/api/public/automations")({
   server: {
     handlers: {
       POST: async ({ request }) => {

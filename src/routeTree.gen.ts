@@ -19,7 +19,6 @@ import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
-import { Route as ApiAutomationsRouteImport } from './routes/api.automations'
 import { Route as CalendarFeedTokenRouteImport } from './routes/calendar-feed.$token'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
 import { Route as QuoteTokenRouteImport } from './routes/quote.$token'
@@ -27,6 +26,7 @@ import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customer
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AdminQuotesIndexRouteImport } from './routes/admin.quotes.index'
 import { Route as AdminQuotesIdRouteImport } from './routes/admin.quotes.$id'
+import { Route as ApiPublicAutomationsRouteImport } from './routes/api.public.automations'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -79,11 +79,6 @@ const AdminStatsRoute = AdminStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiAutomationsRoute = ApiAutomationsRouteImport.update({
-  id: '/api/automations',
-  path: '/api/automations',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CalendarFeedTokenRoute = CalendarFeedTokenRouteImport.update({
   id: '/calendar-feed/$token',
   path: '/calendar-feed/$token',
@@ -119,6 +114,11 @@ const AdminQuotesIdRoute = AdminQuotesIdRouteImport.update({
   path: '/quotes/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicAutomationsRoute = ApiPublicAutomationsRouteImport.update({
+  id: '/api/public/automations',
+  path: '/api/public/automations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -136,13 +136,13 @@ export interface FileRoutesByFullPath {
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
-  '/api/automations': typeof ApiAutomationsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
+  '/api/public/automations': typeof ApiPublicAutomationsRoute
   '/admin/customers/': typeof AdminCustomersIndexRoute
   '/admin/quotes/': typeof AdminQuotesIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -156,13 +156,13 @@ export interface FileRoutesByTo {
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
-  '/api/automations': typeof ApiAutomationsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin': typeof AdminIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
+  '/api/public/automations': typeof ApiPublicAutomationsRoute
   '/admin/customers': typeof AdminCustomersIndexRoute
   '/admin/quotes': typeof AdminQuotesIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -178,13 +178,13 @@ export interface FileRoutesById {
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
-  '/api/automations': typeof ApiAutomationsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
+  '/api/public/automations': typeof ApiPublicAutomationsRoute
   '/admin/customers/': typeof AdminCustomersIndexRoute
   '/admin/quotes/': typeof AdminQuotesIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -201,13 +201,13 @@ export interface FileRouteTypes {
     | '/admin/commission'
     | '/admin/settings'
     | '/admin/stats'
-    | '/api/automations'
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin/'
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
+    | '/api/public/automations'
     | '/admin/customers/'
     | '/admin/quotes/'
     | '/lovable/email/transactional/preview'
@@ -221,13 +221,13 @@ export interface FileRouteTypes {
     | '/admin/commission'
     | '/admin/settings'
     | '/admin/stats'
-    | '/api/automations'
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin'
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
+    | '/api/public/automations'
     | '/admin/customers'
     | '/admin/quotes'
     | '/lovable/email/transactional/preview'
@@ -242,13 +242,13 @@ export interface FileRouteTypes {
     | '/admin/commission'
     | '/admin/settings'
     | '/admin/stats'
-    | '/api/automations'
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin/'
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
+    | '/api/public/automations'
     | '/admin/customers/'
     | '/admin/quotes/'
     | '/lovable/email/transactional/preview'
@@ -260,10 +260,10 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
-  ApiAutomationsRoute: typeof ApiAutomationsRoute
   CalendarFeedTokenRoute: typeof CalendarFeedTokenRoute
   CarpetCleaningCityRoute: typeof CarpetCleaningCityRoute
   QuoteTokenRoute: typeof QuoteTokenRoute
+  ApiPublicAutomationsRoute: typeof ApiPublicAutomationsRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -339,13 +339,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/api/automations': {
-      id: '/api/automations'
-      path: '/api/automations'
-      fullPath: '/api/automations'
-      preLoaderRoute: typeof ApiAutomationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/calendar-feed/$token': {
       id: '/calendar-feed/$token'
       path: '/calendar-feed/$token'
@@ -395,6 +388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuotesIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/automations': {
+      id: '/api/public/automations'
+      path: '/api/public/automations'
+      fullPath: '/api/public/automations'
+      preLoaderRoute: typeof ApiPublicAutomationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -437,10 +437,10 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
-  ApiAutomationsRoute: ApiAutomationsRoute,
   CalendarFeedTokenRoute: CalendarFeedTokenRoute,
   CarpetCleaningCityRoute: CarpetCleaningCityRoute,
   QuoteTokenRoute: QuoteTokenRoute,
+  ApiPublicAutomationsRoute: ApiPublicAutomationsRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport

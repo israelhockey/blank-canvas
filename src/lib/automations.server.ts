@@ -3,7 +3,7 @@ import { sendEmail } from "./email";
 import { SITE_ORIGIN } from "./site-data";
 
 /*
- * The automatic emails, run hourly by /api/automations:
+ * The automatic emails, run hourly by /api/public/automations:
  *   - Day-before reminder for confirmed jobs (sent 4–8pm Central the day before)
  *   - Quote follow-up when a quote sits unanswered for 2 days (sent 10am–6pm Central)
  *   - Google review request the day after a job is paid (sent 10am–6pm Central)
