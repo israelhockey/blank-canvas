@@ -17,10 +17,12 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
+import { Route as AdminLinksRouteImport } from './routes/admin.links'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as CalendarFeedTokenRouteImport } from './routes/calendar-feed.$token'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
+import { Route as GoSlugRouteImport } from './routes/go.$slug'
 import { Route as QuoteTokenRouteImport } from './routes/quote.$token'
 import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
@@ -69,6 +71,11 @@ const AdminCommissionRoute = AdminCommissionRouteImport.update({
   path: '/commission',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLinksRoute = AdminLinksRouteImport.update({
+  id: '/links',
+  path: '/links',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -87,6 +94,11 @@ const CalendarFeedTokenRoute = CalendarFeedTokenRouteImport.update({
 const CarpetCleaningCityRoute = CarpetCleaningCityRouteImport.update({
   id: '/carpet-cleaning/$city',
   path: '/carpet-cleaning/$city',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoSlugRoute = GoSlugRouteImport.update({
+  id: '/go/$slug',
+  path: '/go/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuoteTokenRoute = QuoteTokenRouteImport.update({
@@ -134,10 +146,12 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
+  '/admin/links': typeof AdminLinksRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
+  '/go/$slug': typeof GoSlugRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
@@ -154,10 +168,12 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
+  '/admin/links': typeof AdminLinksRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
+  '/go/$slug': typeof GoSlugRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin': typeof AdminIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
@@ -176,10 +192,12 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
+  '/admin/links': typeof AdminLinksRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
+  '/go/$slug': typeof GoSlugRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
@@ -199,10 +217,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
+    | '/admin/links'
     | '/admin/settings'
     | '/admin/stats'
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
+    | '/go/$slug'
     | '/quote/$token'
     | '/admin/'
     | '/admin/customers/$id'
@@ -219,10 +239,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
+    | '/admin/links'
     | '/admin/settings'
     | '/admin/stats'
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
+    | '/go/$slug'
     | '/quote/$token'
     | '/admin'
     | '/admin/customers/$id'
@@ -240,10 +262,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
+    | '/admin/links'
     | '/admin/settings'
     | '/admin/stats'
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
+    | '/go/$slug'
     | '/quote/$token'
     | '/admin/'
     | '/admin/customers/$id'
@@ -262,6 +286,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   CalendarFeedTokenRoute: typeof CalendarFeedTokenRoute
   CarpetCleaningCityRoute: typeof CarpetCleaningCityRoute
+  GoSlugRoute: typeof GoSlugRoute
   QuoteTokenRoute: typeof QuoteTokenRoute
   ApiPublicAutomationsRoute: typeof ApiPublicAutomationsRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -325,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommissionRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/links': {
+      id: '/admin/links'
+      path: '/links'
+      fullPath: '/admin/links'
+      preLoaderRoute: typeof AdminLinksRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -351,6 +383,13 @@ declare module '@tanstack/react-router' {
       path: '/carpet-cleaning/$city'
       fullPath: '/carpet-cleaning/$city'
       preLoaderRoute: typeof CarpetCleaningCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/go/$slug': {
+      id: '/go/$slug'
+      path: '/go/$slug'
+      fullPath: '/go/$slug'
+      preLoaderRoute: typeof GoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quote/$token': {
@@ -408,6 +447,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminCommissionRoute: typeof AdminCommissionRoute
+  AdminLinksRoute: typeof AdminLinksRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStatsRoute: typeof AdminStatsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -420,6 +460,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminCommissionRoute: AdminCommissionRoute,
+  AdminLinksRoute: AdminLinksRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStatsRoute: AdminStatsRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -439,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   CalendarFeedTokenRoute: CalendarFeedTokenRoute,
   CarpetCleaningCityRoute: CarpetCleaningCityRoute,
+  GoSlugRoute: GoSlugRoute,
   QuoteTokenRoute: QuoteTokenRoute,
   ApiPublicAutomationsRoute: ApiPublicAutomationsRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

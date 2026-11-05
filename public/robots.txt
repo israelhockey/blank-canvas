@@ -3,5 +3,6 @@ Allow: /
 Disallow: /admin
 Disallow: /calendar-feed/
 Disallow: /api/
+Disallow: /go/
 
 Sitemap: https://simplesurfacecarpetcleaning.com/sitemap.xml

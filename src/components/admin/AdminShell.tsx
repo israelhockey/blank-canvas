@@ -7,6 +7,7 @@ import {
   FileText,
   HandCoins,
   LayoutDashboard,
+  Link2,
   LogOut,
   Menu,
   Settings,
@@ -26,6 +27,7 @@ const NAV = [
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/quotes", label: "Quotes", icon: FileText },
   { to: "/admin/stats", label: "Stats", icon: BarChart3 },
+  { to: "/admin/links", label: "Post links", icon: Link2 },
   { to: "/admin/commission", label: "Commission", icon: HandCoins },
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;

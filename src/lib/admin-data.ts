@@ -105,12 +105,21 @@ export function sumItems(items: LineItem[]) {
 
 export type AutomationSettings = { reminders: boolean; quote_followup: boolean; review: boolean };
 
+export type TrackingLink = {
+  slug: string;
+  label: string;
+  channel: string;
+  dest: string;
+  created_at: string;
+};
+
 export type Settings = {
   commission: CommissionRule;
   review_link: string;
   repeat_months: number;
   calendar_token: string;
   automations: AutomationSettings;
+  tracking_links: TrackingLink[];
 };
 
 const DEFAULTS: Settings = {
@@ -119,6 +128,7 @@ const DEFAULTS: Settings = {
   repeat_months: 6,
   calendar_token: "",
   automations: { reminders: true, quote_followup: true, review: true },
+  tracking_links: [],
 };
 
 export async function fetchSettings(): Promise<Settings> {
