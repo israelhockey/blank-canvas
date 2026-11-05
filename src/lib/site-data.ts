@@ -92,6 +92,30 @@ export function lineItems(q: Quantities) {
   }));
 }
 
+/** Quantities in a short link-friendly form, e.g. "room:3,sofa:1" (for "send me this price"). */
+export const encodeQuantities = (q: Quantities) =>
+  ITEMS.filter((i) => (q[i.id] ?? 0) > 0)
+    .map((i) => `${i.id}:${q[i.id]}`)
+    .join(",");
+
+export function decodeQuantities(s: string): Quantities | null {
+  const q = emptyQuantities();
+  let any = false;
+  for (const part of s.split(",")) {
+    const [id, n] = part.split(":");
+    const count = Math.min(20, Math.max(0, Math.floor(Number(n))));
+    if (id && id in q && count > 0) {
+      q[id] = count;
+      any = true;
+    }
+  }
+  return any ? q : null;
+}
+
+/** Opens the customer's texting app with a message ready to send. */
+export const textUsHref = (body = "Hi! I'd like a quote for carpet cleaning.") =>
+  `sms:+12145623449?&body=${encodeURIComponent(body)}`;
+
 export const money = (n: number, digits = 0) =>
   "$" + n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 

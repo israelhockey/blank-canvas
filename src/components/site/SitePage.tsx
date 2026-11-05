@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   DEFAULT_PRESET,
   ITEMS,
+  decodeQuantities,
   PRESETS,
   totals,
   type City,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/site-data";
 import { Commercial } from "./Commercial";
 import { Pricing } from "./Pricing";
+import { QuickLead } from "./QuickLead";
 import {
   AreasFaq,
   CityIntro,
@@ -39,6 +41,16 @@ export function SitePage({ city }: { city?: City }) {
   const [inPricing, setInPricing] = useState(false);
   const onVisible = useCallback((v: boolean) => setInPricing(v), []);
 
+  // A "send me this price" email links back with ?q=room:3,sofa:1 so the builder is pre-filled.
+  useEffect(() => {
+    const saved = new URLSearchParams(window.location.search).get("q");
+    const parsed = saved ? decodeQuantities(saved) : null;
+    if (parsed) {
+      setQ(parsed);
+      setPreset(null);
+    }
+  }, []);
+
   return (
     <div className="ss-site">
       <Notice />
@@ -59,6 +71,7 @@ export function SitePage({ city }: { city?: City }) {
       </main>
       <Footer />
       <MobileBar total={totals(q).total} inPricing={inPricing} />
+      <QuickLead q={q} />
     </div>
   );
 }

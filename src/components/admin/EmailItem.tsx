@@ -32,6 +32,9 @@ export const EMAIL_TYPE: Record<string, string> = {
   review: "Review request",
   repeat: "Repeat-clean reminder",
   custom: "Message",
+  quote_nudge: "Quote follow-up",
+  price_sent: "Their saved price",
+  quick_quote: "Quick quote reply",
 };
 
 /** One email in a customer's email chain: subject, status, and the full text on tap. */

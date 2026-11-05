@@ -187,7 +187,7 @@ function Home() {
       key: l.id,
       at: l.created_at,
       tone: late ? "red" : "amber",
-      title: LEAD_LABEL[l.type] ?? l.type,
+      title: leadTitle(l),
       who: l.name ?? "Website visitor",
       sub: `${leadSummary(l)} · ${ago(l.created_at)}`,
       action: <LeadActions lead={l} onDone={refresh} />,
@@ -448,8 +448,23 @@ function Home() {
   );
 }
 
+function leadTitle(l: Lead) {
+  const d = l.details as Record<string, unknown>;
+  if (d["partial"]) return "Didn't finish booking: call them";
+  if (d["from"] === "price_builder") return "Saved their price: call to book";
+  if (d["from"] === "quick_form") return "Quick quote: text them a price";
+  return LEAD_LABEL[l.type] ?? l.type;
+}
+
 function leadSummary(l: Lead) {
   const d = l.details as Record<string, unknown>;
+  const total = d["total"] ? `$${Math.round(Number(d["total"]))}` : "";
+  const items = Array.isArray(d["items"])
+    ? (d["items"] as { label: string }[]).map((i) => i.label).join(", ")
+    : "";
+  const wants = Array.isArray(d["wants"]) ? (d["wants"] as string[]).join(", ") : "";
+  if (l.type === "quote" || d["partial"])
+    return [l.phone, items || wants, total].filter(Boolean).join(" · ") || "website";
   if (l.type === "walkthrough")
     return [
       d["business"],

@@ -17,6 +17,7 @@ import {
 import { db } from "@/lib/db";
 import { leadSource, track, visitorId } from "@/lib/track";
 import { InfoIcon, ShieldIcon, TickIcon } from "./bits";
+import { openQuickLead } from "./QuickLead";
 
 type Props = {
   q: Quantities;
@@ -186,6 +187,11 @@ export function Pricing({ q, setQ, preset, setPreset, onVisible }: Props) {
             <a className="btn btn-primary" href="#book">
               Pick a time
             </a>
+            {t.total > 0 && (
+              <button className="sum-save" type="button" onClick={() => openQuickLead("price")}>
+                Not ready? Send me this price
+              </button>
+            )}
             <p className="sum-g">
               <ShieldIcon />
               No deposit · 100% Satisfaction Guarantee
@@ -221,6 +227,38 @@ function BookingForm({ q }: { q: Quantities }) {
 
   const [taken, setTaken] = useState<Record<string, number>>({});
   const started = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const partialId = useRef<string | null>(null);
+  const partialSaving = useRef(false);
+
+  /** Once they've typed a name and a full phone number, save them so we can call if they stop. */
+  const savePartial = async () => {
+    const f = formRef.current;
+    const c = db();
+    if (!f || !c || partialId.current || partialSaving.current) return;
+    const data = new FormData(f);
+    const name = String(data.get("name") || "").trim();
+    const phone = String(data.get("phone") || "").trim();
+    if (name.length < 2 || phone.replace(/\D/g, "").length < 10 || data.get("website")) return;
+    partialSaving.current = true;
+    const items = lineItems(q);
+    const t = totals(q);
+    const { data: id } = await c.rpc("submit_lead", {
+      p: {
+        type: "booking",
+        name,
+        phone,
+        email: String(data.get("email") || "").trim(),
+        zip: String(data.get("zip") || "").trim(),
+        source: leadSource(),
+        page: window.location.pathname,
+        visitor_id: visitorId(),
+        details: { partial: true, items, subtotal: t.sub, tax: t.tax, total: t.total },
+      },
+    });
+    partialId.current = (id as string | null) ?? null;
+    partialSaving.current = false;
+  };
 
   // Dates depend on "now", so build them in the browser only; then load which windows are taken.
   useEffect(() => {
@@ -315,6 +353,7 @@ function BookingForm({ q }: { q: Quantities }) {
       const emailed = send({
         data: {
           ...(leadId ? { leadId } : {}),
+          ...(partialId.current ? { partialLeadId: partialId.current } : {}),
           name,
           phone,
           email,
@@ -366,10 +405,12 @@ function BookingForm({ q }: { q: Quantities }) {
 
   return (
     <form
+      ref={formRef}
       className="book"
       id="book"
       noValidate
       onSubmit={onSubmit}
+      onBlur={() => void savePartial().catch(() => undefined)}
       onFocus={() => {
         if (!started.current) {
           started.current = true;

@@ -48,6 +48,7 @@ const bookingSchema = z.object({
   origin: z.string().max(200).optional().default(""),
   website: z.string().max(500).optional().default(""), // honeypot: real people leave it empty
   leadId: z.string().uuid().optional(),
+  partialLeadId: z.string().uuid().optional(),
 });
 
 const walkthroughSchema = z.object({
@@ -100,6 +101,20 @@ async function saveJobAddress(leadId: string, address: string, zip: string) {
   }
 }
 
+/** They started the booking form (saved as a partial lead) and then finished it: close the partial. */
+async function closePartialLead(leadId: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("leads")
+      .update({ status: "booked" })
+      .eq("id", leadId)
+      .eq("status", "new");
+  } catch (e) {
+    console.error("Could not close partial lead", e);
+  }
+}
+
 const adminLink = (customerId: string | null) =>
   customerId ? `${SITE_ORIGIN}/admin/customers/${customerId}` : `${SITE_ORIGIN}/admin`;
 
@@ -131,6 +146,7 @@ export const submitBooking = createServerFn({ method: "POST" })
     ];
     const customerId = await customerForLead(data.leadId);
     if (data.leadId && data.address) await saveJobAddress(data.leadId, data.address, data.zip);
+    if (data.partialLeadId) await closePartialLead(data.partialLeadId);
     const alert = await sendEmail({
       to: notifyList(),
       subject: `New booking: ${data.name}, ${data.day} ${data.window} (${usd(data.total)})`,
@@ -283,4 +299,88 @@ export const quoteAccepted = createServerFn({ method: "POST" })
       });
     }
     return { ok: true };
+  });
+
+/* ---------- Quick quote / "send me this price" ---------- */
+
+const quickSchema = z.object({
+  mode: z.enum(["quick", "price"]),
+  name: z.string().trim().min(2).max(120),
+  phone,
+  email: z.string().trim().max(200).optional().default(""),
+  wants: z.array(z.string().max(40)).max(10).optional().default([]),
+  items: z.array(z.object({ label: z.string().max(120), amount: z.number() })).max(30),
+  subtotal: z.number(),
+  tax: z.number(),
+  total: z.number(),
+  q: z.string().max(300).optional().default(""),
+  page: z.string().max(200).optional().default("/"),
+  source: z.string().max(300).optional().default(""),
+  website: z.string().max(500).optional().default(""),
+  leadId: z.string().uuid().optional(),
+});
+
+/** Alerts the team right away and, if they gave an email, sends their price + a booking link. */
+export const submitQuickLead = createServerFn({ method: "POST" })
+  .validator((d: unknown) => quickSchema.parse(d))
+  .handler(async ({ data }): Promise<SendResult> => {
+    if (data.website) return { ok: true };
+    const customerId = await customerForLead(data.leadId);
+    const priced = data.items.length > 0;
+    const bookLink = `${SITE_ORIGIN}/${data.q ? `?q=${encodeURIComponent(data.q)}` : ""}#book`;
+    const what = priced
+      ? data.items.map((i) => i.label).join(", ")
+      : data.wants.join(", ") || "Not said";
+
+    const pairs: [string, string][] = [
+      ["Name", data.name],
+      ["Phone", data.phone],
+      ["Email", data.email],
+      ["Wants", what],
+      ...(priced ? ([["Their price", `${usd(data.total)} with tax`]] as [string, string][]) : []),
+      ["Form", data.mode === "price" ? "Send me this price (price builder)" : "Quick quote"],
+      ["Page", data.page],
+      ["Came from", data.source],
+    ];
+    const alert = await sendEmail({
+      to: notifyList(),
+      subject: `${data.mode === "price" ? "Price saved" : "Quick quote"}: ${data.name} (${what}) · call now`,
+      html: alertLayout(
+        data.mode === "price" ? "Wants this price: call to book" : "Quick quote request: call now",
+        `<table style="border-collapse:collapse;font-size:15px">${detailRows(pairs)}</table>
+<p style="margin-top:20px">${button(`tel:${data.phone.replace(/[^\d+]/g, "")}`, `Call ${data.name}`)}${button(adminLink(customerId), "Open in back office", "#0f1f38")}</p>`,
+      ),
+      text: `${pairs
+        .filter(([, v]) => v)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n")}\n${adminLink(customerId)}`,
+      replyTo: data.email || undefined,
+    });
+
+    if (data.email && looksLikeEmail(data.email)) {
+      const first = data.name.split(" ")[0] ?? data.name;
+      await sendEmail({
+        to: [data.email],
+        subject: priced
+          ? `Your carpet cleaning price: ${usd(data.total)}`
+          : "Got it! We'll text you your price shortly",
+        html: brandedLayout({
+          origin: SITE_ORIGIN,
+          heading: priced ? `Here's your price, ${first}` : `Thanks, ${first}!`,
+          intro: priced
+            ? "Flat prices, no deposit, and you pay after the job is done. Pick a day and time whenever you're ready, or reply and we'll book it for you."
+            : "We'll text you within a few minutes with your price. Want it now? Build it yourself in under a minute and pick a time that works for you.",
+          body: priced ? itemsTable(data.items, data.subtotal, data.tax, data.total) : "",
+          cta: {
+            label: priced ? "Pick a time" : "See my price",
+            href: priced ? bookLink : `${SITE_ORIGIN}/#pricing`,
+          },
+        }),
+        text: priced
+          ? `Hi ${first}, your Simple Surface Carpet Cleaning price is ${usd(data.total)} with tax (${what}). Pick a time: ${bookLink}. Questions: 214-562-3449.`
+          : `Thanks, ${first}! We'll text you your price shortly. Or build it yourself: ${SITE_ORIGIN}/#pricing. Questions: 214-562-3449.`,
+        log: { type: priced ? "price_sent" : "quick_quote", customerId, leadId: data.leadId },
+      }).catch(() => undefined);
+    }
+    return alert;
   });

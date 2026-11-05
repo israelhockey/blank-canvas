@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
-import { BUSINESS, CITIES, cityParam, money, type City } from "@/lib/site-data";
+import { BUSINESS, CITIES, cityParam, money, textUsHref, type City } from "@/lib/site-data";
 import { ArrowIcon, AutoVideo, BeforeAfter, ClockIcon, LeafIcon, PlugIcon } from "./bits";
+import { openQuickLead } from "./QuickLead";
 
 export function Notice() {
   return (
@@ -165,6 +166,9 @@ export function Hero({ city }: { city?: City | undefined }) {
           <a className="btn btn-primary" href="#pricing">
             See my price in 60 seconds <ArrowIcon />
           </a>
+          <button className="btn btn-onimg" type="button" onClick={() => openQuickLead("quick")}>
+            Get a quick quote
+          </button>
           <a className="btn btn-onimg hide-sm" href={BUSINESS.phoneHref}>
             Call {BUSINESS.phoneDisplay}
           </a>
@@ -734,10 +738,18 @@ export function FinalCta() {
       <div className="final-shade" aria-hidden="true" />
       <div className="wrap final-in">
         <h2>Ready for clean floors?</h2>
-        <p>Price your job in a minute. Pay after it's done.</p>
-        <a className="btn btn-primary" href="#pricing">
-          Get my price
-        </a>
+        <p>Price your job in a minute, or send us your number and we'll text you a price.</p>
+        <div className="final-ctas">
+          <a className="btn btn-primary" href="#pricing">
+            Get my price
+          </a>
+          <button className="btn btn-onimg" type="button" onClick={() => openQuickLead("quick")}>
+            Text me a quote
+          </button>
+          <a className="btn btn-onimg" href={textUsHref()}>
+            Text us
+          </a>
+        </div>
       </div>
     </section>
   );
@@ -838,6 +850,9 @@ export function MobileBar({ total, inPricing }: { total: number; inPricing: bool
     <div className="mbar">
       <a className="btn btn-ghost" href={BUSINESS.phoneHref}>
         Call
+      </a>
+      <a className="btn btn-ghost" href={textUsHref()}>
+        Text
       </a>
       <a className="btn btn-primary" href={booking ? "#book" : "#pricing"}>
         {booking ? `Book · ${money(total)}` : "Get my price"}

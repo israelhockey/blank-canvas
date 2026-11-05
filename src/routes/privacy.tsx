@@ -31,7 +31,9 @@ function Privacy() {
         <li>
           <b>What you give us</b> when you book, request a walkthrough or accept a quote: your name,
           phone number, email, address, ZIP code, the items you want cleaned, your preferred day and
-          time, and any notes (like gate codes or pets).
+          time, and any notes (like gate codes or pets). If you enter your name and phone number in
+          our booking form and leave before finishing, we may save them so we can follow up on your
+          request.
         </li>
         <li>
           <b>Job records</b> we create while serving you: appointments, quotes, payments, receipts

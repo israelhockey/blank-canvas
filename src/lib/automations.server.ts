@@ -1,5 +1,5 @@
 import { buildCustomerEmail } from "./customer-emails";
-import { sendEmail } from "./email";
+import { alertLayout, detailRows, notifyList, sendEmail } from "./email";
 import { SITE_ORIGIN } from "./site-data";
 
 /*
@@ -7,6 +7,7 @@ import { SITE_ORIGIN } from "./site-data";
  *   - Day-before reminder for confirmed jobs (sent 4–8pm Central the day before)
  *   - Quote follow-up when a quote sits unanswered for 2 days (sent 10am–6pm Central)
  *   - Google review request the day after a job is paid (sent 10am–6pm Central)
+ *   - Team alert for anyone who started the booking form but didn't finish (after 20 minutes)
  * Each one goes out once per job or quote, skips "do not contact" customers, can be turned off
  * in Settings, and is saved to the customer's email history like any other email.
  */
@@ -67,7 +68,7 @@ export async function runAutomations() {
   const now = central();
   const daytime = now.hour >= 10 && now.hour < 18;
   const evening = now.hour >= 16 && now.hour < 20;
-  const sent = { reminders: 0, quote_followups: 0, reviews: 0 };
+  const sent = { reminders: 0, quote_followups: 0, reviews: 0, unfinished_alerts: 0 };
   const errors: string[] = [];
 
   const { data: rows } = await db.from("settings").select("key,value");
@@ -245,6 +246,59 @@ export async function runAutomations() {
       });
       if (r.ok) sent.reviews++;
       else errors.push(`review ${p.customers.name}: ${r.error}`);
+    }
+  }
+
+  /* ---------- team alert: started the booking form but didn't finish ---------- */
+  {
+    const { data } = await db
+      .from("leads")
+      .select("id,name,phone,email,customer_id,details,created_at")
+      .eq("type", "booking")
+      .eq("status", "new")
+      .lte("created_at", new Date(Date.now() - 20 * 60000).toISOString())
+      .gte("created_at", new Date(Date.now() - 2 * 86400000).toISOString());
+    const open = (
+      (data ?? []) as {
+        id: string;
+        name: string | null;
+        phone: string | null;
+        email: string | null;
+        customer_id: string | null;
+        details: Record<string, unknown>;
+        created_at: string;
+      }[]
+    ).filter((l) => l.details?.["partial"] && !l.details?.["alerted"]);
+    for (const l of open) {
+      const items = Array.isArray(l.details["items"])
+        ? (l.details["items"] as { label: string }[]).map((i) => i.label).join(", ")
+        : "";
+      const link = l.customer_id
+        ? `${SITE_ORIGIN}/admin/customers/${l.customer_id}`
+        : `${SITE_ORIGIN}/admin`;
+      const r = await sendEmail({
+        to: notifyList(),
+        subject: `Didn't finish booking: ${l.name ?? "Website visitor"} · call them`,
+        html: alertLayout(
+          "Started booking but didn't finish",
+          `<table style="border-collapse:collapse;font-size:15px">${detailRows([
+            ["Name", l.name ?? ""],
+            ["Phone", l.phone ?? ""],
+            ["Email", l.email ?? ""],
+            ["Was pricing", items],
+            ["Total", l.details["total"] ? `$${Number(l.details["total"]).toFixed(2)}` : ""],
+          ])}</table>
+<p style="margin-top:20px"><a href="${link}" style="background:#1650ec;color:#fff;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700">Open in back office</a></p>`,
+        ),
+        text: `${l.name} started booking but didn't finish. Phone: ${l.phone}. ${link}`,
+        idempotencyKey: `unfinished-${l.id}`,
+      });
+      await db
+        .from("leads")
+        .update({ details: { ...l.details, alerted: true } })
+        .eq("id", l.id);
+      if (r.ok) sent.unfinished_alerts++;
+      else errors.push(`unfinished ${l.name}: ${r.error}`);
     }
   }
 
