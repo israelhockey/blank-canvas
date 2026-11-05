@@ -92,9 +92,9 @@ export function track(event: string, label?: string, meta?: Record<string, unkno
         lead_source: event,
         ...(value ? { value, currency: "USD" } : {}),
       });
-      window.fbq?.("track", "Lead");
+      window.fbq?.("track", "Lead", value ? { value, currency: "USD" } : {});
     }
-    if (event === "call_click") window.fbq?.("track", "Contact");
+    if (event === "call_click" || event === "text_click") window.fbq?.("track", "Contact");
   } catch {
     /* ignore */
   }
@@ -139,9 +139,24 @@ export function loadThirdPartyAnalytics() {
     add(`https://www.clarity.ms/tag/${ANALYTICS.clarity}`);
   }
   if (ANALYTICS.metaPixel) {
-    const queue: unknown[] = [];
-    const fbq = (...a: unknown[]) => void queue.push(a);
-    Object.assign(fbq, { queue, loaded: true, version: "2.0", push: fbq });
+    // Meta's official base-code stub: queues calls until fbevents.js loads.
+    type Fbq = ((...a: unknown[]) => void) & {
+      callMethod?: (...a: unknown[]) => void;
+      queue: unknown[];
+      push?: unknown;
+      loaded?: boolean;
+      version?: string;
+    };
+    const fbq = function (this: unknown) {
+      // eslint-disable-next-line prefer-rest-params
+      const args = arguments;
+      if (fbq.callMethod) fbq.callMethod(...Array.from(args));
+      else fbq.queue.push(args);
+    } as unknown as Fbq;
+    fbq.queue = [];
+    fbq.push = fbq;
+    fbq.loaded = true;
+    fbq.version = "2.0";
     window.fbq = fbq;
     (window as unknown as { _fbq?: unknown })._fbq = fbq;
     add("https://connect.facebook.net/en_US/fbevents.js");

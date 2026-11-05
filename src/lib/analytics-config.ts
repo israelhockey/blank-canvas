@@ -8,5 +8,5 @@ export const ANALYTICS = {
   /** Microsoft Clarity project ID (heatmaps + session replays), e.g. "abcd1234ef" */
   clarity: "",
   /** Meta (Facebook) Pixel ID, e.g. "123456789012345" */
-  metaPixel: "",
+  metaPixel: "1847144993194565",
 };
