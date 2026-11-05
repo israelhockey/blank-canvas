@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { BusinessStats } from "@/components/admin/BusinessStats";
 import { Empty, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import { ANALYTICS } from "@/lib/analytics-config";
 import { dbOrThrow } from "@/lib/db";
@@ -48,17 +49,22 @@ const EVENT_LABEL: Record<string, string> = {
   nav_click: "Clicked a menu link",
   quote_view: "Opened a quote",
   quote_accept: "Accepted a quote",
+  quick_lead_open: "Opened quick quote",
+  quick_lead_submit: "Sent quick quote / saved price",
 };
 
 function Stats() {
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(30);
+  const { from, to } = useMemo(() => {
+    const to = new Date(Date.now() + 60000);
+    const from = new Date();
+    from.setHours(0, 0, 0, 0);
+    from.setDate(from.getDate() - (days - 1));
+    return { from, to };
+  }, [days]);
   const stats = useQuery({
     queryKey: ["stats", days],
     queryFn: async () => {
-      const to = new Date(Date.now() + 60000);
-      const from = new Date();
-      from.setHours(0, 0, 0, 0);
-      from.setDate(from.getDate() - (days - 1));
       const { data, error } = await dbOrThrow().rpc("site_stats", {
         p_from: from.toISOString(),
         p_to: to.toISOString(),
@@ -74,8 +80,8 @@ function Stats() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Site stats"
-        sub="Our own tracking of every visit, click and form step. Admin visits and local testing aren't counted."
+        title="Stats"
+        sub="Business results first, then website traffic. Admin visits and local testing aren't counted."
         actions={
           <div className="flex rounded-md border">
             {RANGES.map((r) => (
@@ -94,6 +100,10 @@ function Stats() {
         }
       />
 
+      <h2 className="pt-2 text-lg font-bold">Business</h2>
+      <BusinessStats from={from} to={to} visitorsBySource={s?.sources ?? []} />
+
+      <h2 className="pt-4 text-lg font-bold">Website traffic</h2>
       {!s ? (
         <Empty>{stats.isLoading ? "Loading…" : "No data yet."}</Empty>
       ) : (
