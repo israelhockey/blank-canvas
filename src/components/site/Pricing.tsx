@@ -204,14 +204,19 @@ function BookingForm({ q }: { q: Quantities }) {
   const [days, setDays] = useState<Date[]>([]);
   const [day, setDay] = useState<Date | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
-  const [errs, setErrs] = useState<{ name?: string; phone?: string; zip?: string; slot?: string }>(
-    {},
-  );
+  const [errs, setErrs] = useState<{
+    name?: string;
+    phone?: string;
+    address?: string;
+    zip?: string;
+    slot?: string;
+  }>({});
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "failed">("idle");
   const [doneText, setDoneText] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
   const daysRef = useRef<HTMLDivElement>(null);
 
   const [taken, setTaken] = useState<Record<string, number>>({});
@@ -251,15 +256,20 @@ function BookingForm({ q }: { q: Quantities }) {
     const name = String(f.get("name") || "").trim();
     const phone = String(f.get("phone") || "").trim();
     const zip = String(f.get("zip") || "").trim();
-    const next: { name?: string; phone?: string; zip?: string; slot?: string } = {};
+    const address = String(f.get("address") || "").trim();
+    const next: { name?: string; phone?: string; address?: string; zip?: string; slot?: string } =
+      {};
     if (name.length < 2) next.name = "Add your name so we know who to ask for.";
     if (phone.replace(/\D/g, "").length < 10)
       next.phone = "Enter a 10-digit mobile number so we can text you.";
+    if (address.length < 5 || !/\d/.test(address))
+      next.address = "Add your street address (number and street).";
     if (!/^\d{5}$/.test(zip)) next.zip = "Enter your 5-digit ZIP code.";
     if (!day || !slot) next.slot = "Pick a day and an arrival window.";
     setErrs(next);
     if (next.name) return nameRef.current?.focus();
     if (next.phone) return phoneRef.current?.focus();
+    if (next.address) return addressRef.current?.focus();
     if (next.zip) return zipRef.current?.focus();
     if (next.slot) return daysRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
 
@@ -282,6 +292,7 @@ function BookingForm({ q }: { q: Quantities }) {
                   phone,
                   email,
                   zip,
+                  address,
                   day_iso: iso(day!),
                   window: slot,
                   source: leadSource(),
@@ -293,6 +304,7 @@ function BookingForm({ q }: { q: Quantities }) {
                     tax: t.tax,
                     total: t.total,
                     notes,
+                    address,
                     day: dayLabel,
                   },
                 },
@@ -307,6 +319,7 @@ function BookingForm({ q }: { q: Quantities }) {
           phone,
           email,
           zip,
+          address,
           day: dayLabel,
           window: slot!,
           notes,
@@ -399,6 +412,18 @@ function BookingForm({ q }: { q: Quantities }) {
           </span>
           <input className="i" name="email" type="email" autoComplete="email" />
         </label>
+        <label className="f full">
+          Street address
+          <input
+            ref={addressRef}
+            className="i"
+            name="address"
+            autoComplete="street-address"
+            placeholder="1234 Oak St, Apt 5"
+            aria-invalid={!!errs.address}
+          />
+          <span className="err">{errs.address}</span>
+        </label>
         <label className="f">
           ZIP code
           <input
@@ -476,7 +501,7 @@ function BookingForm({ q }: { q: Quantities }) {
 
         <label className="f full">
           <span>
-            Anything we should know? <em>(pets, stains, stairs, gate code)</em>
+            Gate code or anything we should know? <em>(pets, stains, stairs, parking)</em>
           </span>
           <textarea className="i" name="notes" />
         </label>
@@ -491,7 +516,8 @@ function BookingForm({ q }: { q: Quantities }) {
           We'll text you to confirm. No deposit and nothing to pay now; you pay after the job is
           done. Have photos of a stain? Text them to {BUSINESS.phoneDisplay}.
           <span className="consent" style={{ display: "block", marginTop: 6 }}>
-            By booking, you agree Simple Surface may call or text you about this request.
+            By booking, you agree Simple Surface may call or text you about this request. See our
+            <a href="/privacy">Privacy Policy</a>.
           </span>
         </p>
         <button className="btn btn-primary" type="submit" disabled={status === "sending"}>

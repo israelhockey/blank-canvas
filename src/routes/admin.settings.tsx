@@ -8,7 +8,7 @@ import { Field, PageHeader, Panel, selectClass } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sendTestEmail, squareStatus } from "@/lib/admin.functions";
-import { saveSetting, useRefresh, useSettings } from "@/lib/admin-data";
+import { saveSetting, useRefresh, useSettings, type AutomationSettings } from "@/lib/admin-data";
 import { accessToken, dbOrThrow } from "@/lib/db";
 import type { CommissionRule, TeamInvite, TeamMember } from "@/lib/db-types";
 
@@ -24,8 +24,14 @@ function SettingsPage() {
   const [rule, setRule] = useState<CommissionRule>({ type: "percent", value: 20 });
   const [review, setReview] = useState("");
   const [months, setMonths] = useState(6);
+  const [auto, setAuto] = useState<AutomationSettings>({
+    reminders: true,
+    quote_followup: true,
+    review: true,
+  });
   useEffect(() => {
     if (!settings.data) return;
+    setAuto(settings.data.automations);
     setRule(settings.data.commission);
     setReview(settings.data.review_link);
     setMonths(Number(settings.data.repeat_months) || 6);
@@ -59,6 +65,7 @@ function SettingsPage() {
       await saveSetting("commission", { ...rule, value: Number(rule.value) || 0 });
       await saveSetting("review_link", review.trim());
       await saveSetting("repeat_months", months);
+      await saveSetting("automations", auto);
       toast.success("Settings saved");
       void refresh();
     } catch (e) {
@@ -139,6 +146,43 @@ function SettingsPage() {
             </div>
           </div>
         </Panel>
+        <Panel title="Automatic emails">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Sent on their own, once each, and saved to the customer's email history. Customers
+            marked "do not contact" are skipped.
+          </p>
+          <div className="space-y-2.5 text-sm">
+            {(
+              [
+                ["reminders", "Day-before reminder", "Confirmed jobs, sent the afternoon before."],
+                [
+                  "quote_followup",
+                  "Quote follow-up",
+                  "If a quote hasn't been accepted after 2 days.",
+                ],
+                [
+                  "review",
+                  "Google review request",
+                  "The day after a job is paid. Needs the review link above.",
+                ],
+              ] as const
+            ).map(([k, label, hint]) => (
+              <label key={k} className="flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={auto[k]}
+                  onChange={(e) => setAuto({ ...auto, [k]: e.target.checked })}
+                />
+                <span>
+                  <span className="font-medium">{label}</span>
+                  <span className="block text-xs text-muted-foreground">{hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </Panel>
+        <CalendarFeed token={settings.data?.calendar_token ?? ""} onChange={refresh} />
       </div>
       <Button onClick={() => void saveAll()}>Save settings</Button>
 
@@ -232,5 +276,69 @@ function SettingsPage() {
         </Panel>
       </div>
     </div>
+  );
+}
+
+/** Private calendar link: every booked job shows up in Google Calendar or the iPhone Calendar. */
+function CalendarFeed({ token, onChange }: { token: string; onChange: () => unknown }) {
+  const url = token ? `https://simplesurfacecarpetcleaning.com/calendar-feed/${token}.ics` : "";
+  const webcal = url.replace(/^https:/, "webcal:");
+  const create = async () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(24));
+    const t = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    await saveSetting("calendar_token", t);
+    toast.success(token ? "New link made. The old one stopped working." : "Calendar link ready");
+    void onChange();
+  };
+  return (
+    <Panel title="Jobs on your phone's calendar">
+      {url ? (
+        <div className="space-y-3 text-sm">
+          <p className="text-muted-foreground">
+            Add this once and every booked job appears on your calendar with the customer, address,
+            phone and price. It updates on its own (Google can take a few hours).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm">
+              <a href={webcal}>Add to iPhone / Mac Calendar</a>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <a
+                href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Add to Google Calendar
+              </a>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                void navigator.clipboard.writeText(url).then(() => toast.success("Link copied"))
+              }
+            >
+              Copy link
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Keep this link private: anyone with it can see your schedule.{" "}
+            <button className="underline" onClick={() => void create()}>
+              Make a new link
+            </button>{" "}
+            if it was shared by mistake.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3 text-sm">
+          <p className="text-muted-foreground">
+            Get a private link that puts every booked job on his phone's calendar automatically.
+          </p>
+          <Button size="sm" onClick={() => void create()}>
+            Create calendar link
+          </Button>
+        </div>
+      )}
+    </Panel>
   );
 }

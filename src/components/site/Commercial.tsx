@@ -238,7 +238,9 @@ export function Commercial() {
                 {status === "sending" ? "Sending…" : "Request a free walkthrough"}
               </button>
               <p className="consent">
-                By requesting, you agree Simple Surface may call or text you about this request.
+                By requesting, you agree Simple Surface may call or text you about this request. See
+                our
+                <a href="/privacy">Privacy Policy</a>.
               </p>
               {status === "failed" && (
                 <p className="form-error" role="alert">

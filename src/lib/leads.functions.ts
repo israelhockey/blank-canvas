@@ -35,6 +35,7 @@ const bookingSchema = z.object({
     .string()
     .trim()
     .regex(/^\d{5}$/),
+  address: z.string().trim().max(200).optional().default(""),
   day: z.string().trim().min(3).max(80),
   window: z.string().trim().min(3).max(40),
   notes: z.string().trim().max(2000).optional().default(""),
@@ -85,6 +86,20 @@ async function customerForLead(leadId: string | undefined): Promise<string | nul
   }
 }
 
+/** The booking RPC stores ZIP only; put the street address on the job it created. */
+async function saveJobAddress(leadId: string, address: string, zip: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("jobs")
+      .update({ address: `${address}, ${zip}` })
+      .eq("lead_id", leadId)
+      .is("address", null);
+  } catch (e) {
+    console.error("Could not save job address", e);
+  }
+}
+
 const adminLink = (customerId: string | null) =>
   customerId ? `${SITE_ORIGIN}/admin/customers/${customerId}` : `${SITE_ORIGIN}/admin`;
 
@@ -102,6 +117,7 @@ export const submitBooking = createServerFn({ method: "POST" })
       ["Name", data.name],
       ["Phone", data.phone],
       ["Email", data.email],
+      ["Address", data.address],
       ["ZIP", data.zip],
       ["Day", data.day],
       ["Arrival", data.window],
@@ -114,6 +130,7 @@ export const submitBooking = createServerFn({ method: "POST" })
       ["Came from", data.source],
     ];
     const customerId = await customerForLead(data.leadId);
+    if (data.leadId && data.address) await saveJobAddress(data.leadId, data.address, data.zip);
     const alert = await sendEmail({
       to: notifyList(),
       subject: `New booking: ${data.name}, ${data.day} ${data.window} (${usd(data.total)})`,

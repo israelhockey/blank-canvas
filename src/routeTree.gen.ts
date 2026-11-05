@@ -11,12 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
+import { Route as ApiAutomationsRouteImport } from './routes/api.automations'
+import { Route as CalendarFeedTokenRouteImport } from './routes/calendar-feed.$token'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
 import { Route as QuoteTokenRouteImport } from './routes/quote.$token'
 import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
@@ -35,9 +39,19 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -64,6 +78,16 @@ const AdminStatsRoute = AdminStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
   getParentRoute: () => AdminRoute,
+} as any)
+const ApiAutomationsRoute = ApiAutomationsRouteImport.update({
+  id: '/api/automations',
+  path: '/api/automations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarFeedTokenRoute = CalendarFeedTokenRouteImport.update({
+  id: '/calendar-feed/$token',
+  path: '/calendar-feed/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CarpetCleaningCityRoute = CarpetCleaningCityRouteImport.update({
   id: '/carpet-cleaning/$city',
@@ -105,11 +129,15 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/api/automations': typeof ApiAutomationsRoute
+  '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -121,11 +149,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/api/automations': typeof ApiAutomationsRoute
+  '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin': typeof AdminIndexRoute
@@ -139,11 +171,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/api/automations': typeof ApiAutomationsRoute
+  '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -158,11 +194,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
     | '/admin/settings'
     | '/admin/stats'
+    | '/api/automations'
+    | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin/'
@@ -174,11 +214,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
     | '/admin/settings'
     | '/admin/stats'
+    | '/api/automations'
+    | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin'
@@ -191,11 +235,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
     | '/admin/settings'
     | '/admin/stats'
+    | '/api/automations'
+    | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/quote/$token'
     | '/admin/'
@@ -209,7 +257,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
+  ApiAutomationsRoute: typeof ApiAutomationsRoute
+  CalendarFeedTokenRoute: typeof CalendarFeedTokenRoute
   CarpetCleaningCityRoute: typeof CarpetCleaningCityRoute
   QuoteTokenRoute: typeof QuoteTokenRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -231,11 +283,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -272,6 +338,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/stats'
       preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/automations': {
+      id: '/api/automations'
+      path: '/api/automations'
+      fullPath: '/api/automations'
+      preLoaderRoute: typeof ApiAutomationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar-feed/$token': {
+      id: '/calendar-feed/$token'
+      path: '/calendar-feed/$token'
+      fullPath: '/calendar-feed/$token'
+      preLoaderRoute: typeof CalendarFeedTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/carpet-cleaning/$city': {
       id: '/carpet-cleaning/$city'
@@ -354,7 +434,11 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
+  ApiAutomationsRoute: ApiAutomationsRoute,
+  CalendarFeedTokenRoute: CalendarFeedTokenRoute,
   CarpetCleaningCityRoute: CarpetCleaningCityRoute,
   QuoteTokenRoute: QuoteTokenRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

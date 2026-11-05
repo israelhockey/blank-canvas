@@ -103,16 +103,22 @@ export function sumItems(items: LineItem[]) {
 
 /* ---------- settings ---------- */
 
+export type AutomationSettings = { reminders: boolean; quote_followup: boolean; review: boolean };
+
 export type Settings = {
   commission: CommissionRule;
   review_link: string;
   repeat_months: number;
+  calendar_token: string;
+  automations: AutomationSettings;
 };
 
 const DEFAULTS: Settings = {
   commission: { type: "percent", value: 20 },
   review_link: "",
   repeat_months: 6,
+  calendar_token: "",
+  automations: { reminders: true, quote_followup: true, review: true },
 };
 
 export async function fetchSettings(): Promise<Settings> {
@@ -121,6 +127,7 @@ export async function fetchSettings(): Promise<Settings> {
   );
   const s: Record<string, unknown> = { ...DEFAULTS };
   for (const r of data) s[r.key] = r.value;
+  s["automations"] = { ...DEFAULTS.automations, ...((s["automations"] as object) ?? {}) };
   return s as Settings;
 }
 

@@ -821,6 +821,13 @@ export function Footer() {
           </ul>
         </div>
       </div>
+      <div className="wrap legal">
+        <span>
+          © {new Date().getFullYear()} {BUSINESS.legalName} · Fort Worth, TX
+        </span>
+        <Link to="/privacy">Privacy Policy</Link>
+        <Link to="/terms">Terms of Service</Link>
+      </div>
     </footer>
   );
 }
