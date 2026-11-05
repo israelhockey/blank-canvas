@@ -222,8 +222,7 @@ export const sendCustomerEmail = createServerFn({ method: "POST" })
     if (!canEmailCustomers()) {
       return {
         ok: false as const,
-        error:
-          "Customer emails need FROM_EMAIL on a verified domain in Resend. Set it in Lovable Secrets.",
+        error: "Customer emails are unavailable right now. Please try again shortly.",
       };
     }
     const first = data.name.split(" ")[0] || data.name;
