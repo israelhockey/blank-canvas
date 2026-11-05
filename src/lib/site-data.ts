@@ -60,6 +60,9 @@ export const PRESETS: { id: string; label: string; q: Quantities }[] = [
 
 export const DEFAULT_PRESET = "home";
 
+/** How many jobs he can take per arrival window. */
+export const SLOTS_PER_WINDOW = 1;
+
 export const ARRIVAL_WINDOWS = ["9–11am", "11am–1pm", "1–3pm", "3–5pm"];
 
 export function emptyQuantities(): Quantities {

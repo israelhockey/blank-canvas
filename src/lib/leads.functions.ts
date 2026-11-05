@@ -1,18 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-/*
- * Booking and walkthrough requests.
- *
- * Each request is emailed to the business through Resend.
- * Secrets (set them in Lovable → Settings → Secrets, never in the repo):
- *   RESEND_API_KEY  – Resend API key
- *   NOTIFY_EMAILS   – comma-separated list of who gets the alerts
- *   FROM_EMAIL      – verified sender, e.g. "Simple Surface Bookings <bookings@yourdomain.com>"
- * If NOTIFY_EMAILS is missing, alerts go to the business inbox below.
- */
+import {
+  alertLayout,
+  brandedLayout,
+  canEmailCustomers,
+  detailRows,
+  esc,
+  itemsTable,
+  notifyList,
+  sendEmail,
+  usd,
+  type SendResult,
+} from "./email";
 
-const BUSINESS_INBOX = "simplesurfacellc@gmail.com";
+/*
+ * Public website forms: booking and commercial walkthrough requests.
+ * The form also saves itself to the database (submit_lead); these functions send the emails:
+ *   - an instant alert to the team (NOTIFY_EMAILS)
+ *   - a branded confirmation to the customer, once FROM_EMAIL is on a verified domain
+ */
 
 const phone = z
   .string()
@@ -36,6 +43,7 @@ const bookingSchema = z.object({
   total: z.number(),
   page: z.string().max(200).optional().default("/"),
   source: z.string().max(300).optional().default(""),
+  origin: z.string().max(200).optional().default(""),
   website: z.string().max(500).optional().default(""), // honeypot: real people leave it empty
 });
 
@@ -55,72 +63,12 @@ const walkthroughSchema = z.object({
 
 export type BookingInput = z.input<typeof bookingSchema>;
 export type WalkthroughInput = z.input<typeof walkthroughSchema>;
-type Result = { ok: true } | { ok: false; error: string };
 
-const esc = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
-  );
-const usd = (n: number) =>
-  "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-function rows(pairs: [string, string][]) {
-  return pairs
-    .filter(([, v]) => v)
-    .map(
-      ([k, v]) =>
-        `<tr><td style="padding:6px 14px 6px 0;color:#56627a;vertical-align:top;white-space:nowrap">${esc(k)}</td><td style="padding:6px 0;color:#0f1f38;font-weight:600">${esc(v)}</td></tr>`,
-    )
-    .join("");
-}
-
-function wrap(title: string, body: string) {
-  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f1f38">
-<h2 style="margin:0 0 4px;font-size:20px">${esc(title)}</h2>
-<p style="margin:0 0 18px;color:#56627a;font-size:14px">From the Simple Surface website. Reply fast: leads book with whoever answers first.</p>
-${body}</div>`;
-}
-
-async function sendAlert(
-  subject: string,
-  html: string,
-  text: string,
-  replyTo?: string,
-): Promise<Result> {
-  const key = process.env["RESEND_API_KEY"];
-  if (!key) {
-    console.error("RESEND_API_KEY is not set");
-    return { ok: false, error: "not_configured" };
-  }
-  const to = (process.env["NOTIFY_EMAILS"] || BUSINESS_INBOX)
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const from = process.env["FROM_EMAIL"] || "Simple Surface Bookings <onboarding@resend.dev>";
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to,
-      subject,
-      html,
-      text,
-      ...(replyTo ? { reply_to: replyTo } : {}),
-    }),
-  });
-  if (!res.ok) {
-    console.error("Resend error", res.status, await res.text().catch(() => ""));
-    return { ok: false, error: "send_failed" };
-  }
-  return { ok: true };
-}
+const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
 export const submitBooking = createServerFn({ method: "POST" })
   .validator((d: unknown) => bookingSchema.parse(d))
-  .handler(async ({ data }): Promise<Result> => {
+  .handler(async ({ data }): Promise<SendResult> => {
     if (data.website) return { ok: true }; // bot filled the honeypot; pretend success
 
     const itemsText =
@@ -140,22 +88,44 @@ export const submitBooking = createServerFn({ method: "POST" })
       ["Page", data.page],
       ["Came from", data.source],
     ];
-    const subject = `New booking: ${data.name}, ${data.day} ${data.window} (${usd(data.total)})`;
-    const html = wrap(
-      "New booking request",
-      `<table style="border-collapse:collapse;font-size:15px">${rows(pairs)}</table>
+    const alert = await sendEmail({
+      to: notifyList(),
+      subject: `New booking: ${data.name}, ${data.day} ${data.window} (${usd(data.total)})`,
+      html: alertLayout(
+        "New booking request",
+        `<table style="border-collapse:collapse;font-size:15px">${detailRows(pairs)}</table>
 <p style="margin-top:20px"><a href="tel:${esc(data.phone.replace(/[^\d+]/g, ""))}" style="background:#1650ec;color:#fff;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700">Call ${esc(data.name)}</a></p>`,
-    );
-    const text = pairs
-      .filter(([, v]) => v)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\n");
-    return sendAlert(subject, html, text, data.email || undefined);
+      ),
+      text: pairs
+        .filter(([, v]) => v)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n"),
+      replyTo: data.email || undefined,
+    });
+
+    // Confirmation to the customer (only from a verified domain, never from resend.dev).
+    if (data.email && looksLikeEmail(data.email) && canEmailCustomers()) {
+      const first = data.name.split(" ")[0] ?? data.name;
+      await sendEmail({
+        to: [data.email],
+        subject: `We got your booking request for ${data.day}`,
+        html: brandedLayout({
+          origin: data.origin,
+          heading: `Thanks, ${first}! Your request is in.`,
+          intro: `We'll text you shortly to confirm ${data.day}, ${data.window} arrival. No deposit; you pay after the job is done.`,
+          body: data.items.length
+            ? itemsTable(data.items, data.subtotal, data.tax, data.total)
+            : "",
+        }),
+        text: `Thanks, ${first}! We got your booking request for ${data.day}, ${data.window}. We'll text you to confirm. Total ${usd(data.total)} with tax. Questions: 214-562-3449.`,
+      }).catch(() => undefined);
+    }
+    return alert;
   });
 
 export const submitWalkthrough = createServerFn({ method: "POST" })
   .validator((d: unknown) => walkthroughSchema.parse(d))
-  .handler(async ({ data }): Promise<Result> => {
+  .handler(async ({ data }): Promise<SendResult> => {
     if (data.website) return { ok: true };
 
     const pairs: [string, string][] = [
@@ -169,14 +139,16 @@ export const submitWalkthrough = createServerFn({ method: "POST" })
       ["Page", data.page],
       ["Came from", data.source],
     ];
-    const subject = `Commercial walkthrough: ${data.business} (${data.sqft.toLocaleString("en-US")} sq ft)`;
-    const html = wrap(
-      "New commercial walkthrough request",
-      `<table style="border-collapse:collapse;font-size:15px">${rows(pairs)}</table>`,
-    );
-    const text = pairs
-      .filter(([, v]) => v)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\n");
-    return sendAlert(subject, html, text);
+    return sendEmail({
+      to: notifyList(),
+      subject: `Commercial walkthrough: ${data.business} (${data.sqft.toLocaleString("en-US")} sq ft)`,
+      html: alertLayout(
+        "New commercial walkthrough request",
+        `<table style="border-collapse:collapse;font-size:15px">${detailRows(pairs)}</table>`,
+      ),
+      text: pairs
+        .filter(([, v]) => v)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n"),
+    });
   });

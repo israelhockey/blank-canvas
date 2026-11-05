@@ -274,27 +274,3 @@ export function BeforeAfter() {
     </div>
   );
 }
-
-/* ---------- where the visitor came from (for knowing which posts and ads work) ---------- */
-export function getLeadSource(): string {
-  if (typeof window === "undefined") return "";
-  try {
-    const KEY = "ss_source";
-    const saved = sessionStorage.getItem(KEY);
-    if (saved) return saved;
-    const p = new URLSearchParams(window.location.search);
-    const utm = ["utm_source", "utm_medium", "utm_campaign"]
-      .map((k) => p.get(k))
-      .filter(Boolean)
-      .join(" / ");
-    const ref =
-      document.referrer && !document.referrer.includes(window.location.host)
-        ? document.referrer
-        : "";
-    const src = utm || ref || "direct";
-    sessionStorage.setItem(KEY, src);
-    return src;
-  } catch {
-    return "";
-  }
-}

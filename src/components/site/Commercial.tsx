@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { submitWalkthrough } from "@/lib/leads.functions";
 import { BUSINESS, COMMERCIAL_RATE, money } from "@/lib/site-data";
-import { AutoVideo, TickIcon, getLeadSource } from "./bits";
+import { db } from "@/lib/db";
+import { leadSource, track, visitorId } from "@/lib/track";
+import { AutoVideo, TickIcon } from "./bits";
 
 const FREQUENCIES = [
   { label: "One time", perYear: 1 },
@@ -55,23 +57,52 @@ export function Commercial() {
     setErrs(next);
     if (next.biz || next.phone) return;
     setStatus("sending");
+    const type = String(f.get("type") || "");
+    const name = String(f.get("name") || "");
+    const honeypot = String(f.get("website") || "");
+    const size = Math.max(0, sqft || 0);
     try {
-      const res = await send({
+      const c = db();
+      const saved =
+        c && !honeypot
+          ? c
+              .rpc("submit_lead", {
+                p: {
+                  type: "walkthrough",
+                  name,
+                  business,
+                  phone,
+                  source: leadSource(),
+                  page: window.location.pathname,
+                  visitor_id: visitorId(),
+                  details: { business, type, sqft: size, frequency: fq.label, perClean, perYear },
+                },
+              })
+              .then(({ error }) => !error)
+          : Promise.resolve(false);
+      const emailed = send({
         data: {
           business,
-          type: String(f.get("type") || ""),
-          name: String(f.get("name") || ""),
+          type,
+          name,
           phone,
-          sqft: Math.max(0, sqft || 0),
+          sqft: size,
           frequency: fq.label,
           perClean,
           perYear,
           page: window.location.pathname,
-          source: getLeadSource(),
-          website: String(f.get("website") || ""),
+          source: leadSource(),
+          website: honeypot,
         },
-      });
-      if (!res.ok) throw new Error(res.error);
+      })
+        .then((r) => r.ok)
+        .catch(() => false);
+      const [dbOk, mailOk] = await Promise.all([
+        Promise.resolve(saved).catch(() => false),
+        emailed,
+      ]);
+      if (!dbOk && !mailOk) throw new Error("not sent");
+      track("walkthrough_submit", type, { sqft: size });
       setDoneText(
         `${business}, about ${Math.max(0, sqft || 0).toLocaleString()} sq ft. We'll call ${phone} to set up a free walkthrough.`,
       );

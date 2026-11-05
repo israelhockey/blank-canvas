@@ -420,3 +420,5 @@ footer a:hover{color:var(--ink)}
 img,video{max-width:100%}
 .hero .hero-img{max-width:none}
 .btn svg,.proof svg,.sum-g svg,.note-row svg,.done .tick svg,.ba .handle svg{display:inline-block}
+
+.days button:disabled,.slots button:disabled{opacity:.38;cursor:not-allowed;text-decoration:line-through}

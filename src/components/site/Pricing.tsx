@@ -7,12 +7,15 @@ import {
   BUSINESS,
   ITEM_GROUPS,
   PRESETS,
+  SLOTS_PER_WINDOW,
   lineItems,
   money,
   totals,
   type Quantities,
 } from "@/lib/site-data";
-import { InfoIcon, ShieldIcon, TickIcon, getLeadSource } from "./bits";
+import { db } from "@/lib/db";
+import { leadSource, track, visitorId } from "@/lib/track";
+import { InfoIcon, ShieldIcon, TickIcon } from "./bits";
 
 type Props = {
   q: Quantities;
@@ -21,6 +24,9 @@ type Props = {
   setPreset: (p: string | null) => void;
   onVisible: (v: boolean) => void;
 };
+
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 /** Next 14 working days (Mon–Sat) in Fort Worth time, starting tomorrow. */
 function upcomingDays(): Date[] {
@@ -58,6 +64,7 @@ export function Pricing({ q, setQ, preset, setPreset, onVisible }: Props) {
   const bump = (id: string, d: number) => {
     setQ({ ...q, [id]: Math.max(0, Math.min(20, (q[id] ?? 0) + d)) });
     setPreset(null);
+    track("price_change", `${d > 0 ? "+" : "-"} ${id}`);
   };
 
   return (
@@ -85,6 +92,7 @@ export function Pricing({ q, setQ, preset, setPreset, onVisible }: Props) {
                 ITEM_GROUPS.forEach((g) => g.items.forEach((i) => (next[i.id] = p.q[i.id] ?? 0)));
                 setQ(next);
                 setPreset(p.id);
+                track("preset", p.label);
               }}
             >
               {p.label}
@@ -205,8 +213,31 @@ function BookingForm({ q }: { q: Quantities }) {
   const zipRef = useRef<HTMLInputElement>(null);
   const daysRef = useRef<HTMLDivElement>(null);
 
-  // Dates depend on "now", so build them in the browser only.
-  useEffect(() => setDays(upcomingDays()), []);
+  const [taken, setTaken] = useState<Record<string, number>>({});
+  const started = useRef(false);
+
+  // Dates depend on "now", so build them in the browser only; then load which windows are taken.
+  useEffect(() => {
+    const list = upcomingDays();
+    setDays(list);
+    const c = db();
+    if (!c || !list.length) return;
+    void c
+      .rpc("booked_slots", { p_from: iso(list[0]!), p_to: iso(list[list.length - 1]!) })
+      .then(({ data }) => {
+        const m: Record<string, number> = {};
+        for (const r of (data ?? []) as { day: string; arrival_window: string; n: number }[]) {
+          const k = `${r.day}|${r.arrival_window}`;
+          m[k] = (m[k] ?? 0) + Number(r.n);
+        }
+        setTaken(m);
+      });
+  }, []);
+
+  const dayBlocked = (d: Date) => (taken[`${iso(d)}|*`] ?? 0) > 0;
+  const slotFull = (d: Date | null, w: string) =>
+    !!d && (dayBlocked(d) || (taken[`${iso(d)}|${w}`] ?? 0) >= SLOTS_PER_WINDOW);
+  const dayFull = (d: Date) => dayBlocked(d) || ARRIVAL_WINDOWS.every((w) => slotFull(d, w));
 
   const dayLabel = day
     ? day.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
@@ -233,27 +264,67 @@ function BookingForm({ q }: { q: Quantities }) {
 
     const t = totals(q);
     const items = lineItems(q);
+    const email = String(f.get("email") || "");
+    const notes = String(f.get("notes") || "");
+    const honeypot = String(f.get("website") || "");
     setStatus("sending");
     try {
-      const res = await send({
+      // Save to the database and email the team in parallel; either one succeeding is enough.
+      const c = db();
+      const saved =
+        c && !honeypot
+          ? c
+              .rpc("submit_lead", {
+                p: {
+                  type: "booking",
+                  name,
+                  phone,
+                  email,
+                  zip,
+                  day_iso: iso(day!),
+                  window: slot,
+                  source: leadSource(),
+                  page: window.location.pathname,
+                  visitor_id: visitorId(),
+                  details: {
+                    items,
+                    subtotal: t.sub,
+                    tax: t.tax,
+                    total: t.total,
+                    notes,
+                    day: dayLabel,
+                  },
+                },
+              })
+              .then(({ error }) => !error)
+          : Promise.resolve(false);
+      const emailed = send({
         data: {
           name,
           phone,
-          email: String(f.get("email") || ""),
+          email,
           zip,
           day: dayLabel,
           window: slot!,
-          notes: String(f.get("notes") || ""),
+          notes,
           items,
           subtotal: t.sub,
           tax: t.tax,
           total: t.total,
           page: window.location.pathname,
-          source: getLeadSource(),
-          website: String(f.get("website") || ""),
+          source: leadSource(),
+          origin: window.location.origin,
+          website: honeypot,
         },
-      });
-      if (!res.ok) throw new Error(res.error);
+      })
+        .then((r) => r.ok)
+        .catch(() => false);
+      const [dbOk, mailOk] = await Promise.all([
+        Promise.resolve(saved).catch(() => false),
+        emailed,
+      ]);
+      if (!dbOk && !mailOk) throw new Error("not sent");
+      track("booking_submit", dayLabel, { total: t.total });
       const what = items.map((i) => i.label).join(", ") || "your cleaning";
       setDoneText(
         `Thanks, ${name.split(" ")[0]}. We got your request for ${what} (${money(t.total, 2)} with tax) on ${pickLabel}. We'll text ${phone} shortly to confirm.`,
@@ -281,7 +352,18 @@ function BookingForm({ q }: { q: Quantities }) {
   }
 
   return (
-    <form className="book" id="book" noValidate onSubmit={onSubmit}>
+    <form
+      className="book"
+      id="book"
+      noValidate
+      onSubmit={onSubmit}
+      onFocus={() => {
+        if (!started.current) {
+          started.current = true;
+          track("booking_start");
+        }
+      }}
+    >
       <div className="book-head">
         <h3>Book your cleaning</h3>
         <span className="eyebrow">No deposit · Pay after the job</span>
@@ -344,12 +426,16 @@ function BookingForm({ q }: { q: Quantities }) {
                 type="button"
                 role="radio"
                 aria-checked={day?.toDateString() === d.toDateString()}
+                disabled={dayFull(d)}
                 aria-label={d.toLocaleDateString("en-US", {
                   weekday: "long",
                   month: "long",
                   day: "numeric",
                 })}
-                onClick={() => setDay(d)}
+                onClick={() => {
+                  setDay(d);
+                  if (slot && slotFull(d, slot)) setSlot(null);
+                }}
               >
                 <small>{d.toLocaleDateString("en-US", { weekday: "short" })}</small>
                 <b>{d.getDate()}</b>
@@ -368,9 +454,11 @@ function BookingForm({ q }: { q: Quantities }) {
                 type="button"
                 role="radio"
                 aria-checked={slot === w}
+                disabled={slotFull(day, w)}
                 onClick={() => setSlot(w)}
               >
                 {w}
+                {slotFull(day, w) && <span className="sr-only"> (booked)</span>}
               </button>
             ))}
           </div>

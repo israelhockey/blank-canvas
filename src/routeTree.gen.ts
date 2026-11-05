@@ -10,12 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
+import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
+import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
+import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
+import { Route as QuoteTokenRouteImport } from './routes/quote.$token'
+import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
+import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
+import { Route as AdminQuotesIndexRouteImport } from './routes/admin.quotes.index'
+import { Route as AdminQuotesIdRouteImport } from './routes/admin.quotes.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -23,40 +41,188 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCalendarRoute = AdminCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCommissionRoute = AdminCommissionRouteImport.update({
+  id: '/commission',
+  path: '/commission',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLeadsRoute = AdminLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPipelineRoute = AdminPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStatsRoute = AdminStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CarpetCleaningCityRoute = CarpetCleaningCityRouteImport.update({
   id: '/carpet-cleaning/$city',
   path: '/carpet-cleaning/$city',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuoteTokenRoute = QuoteTokenRouteImport.update({
+  id: '/quote/$token',
+  path: '/quote/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCustomersIndexRoute = AdminCustomersIndexRouteImport.update({
+  id: '/customers/',
+  path: '/customers/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
+  id: '/customers/$id',
+  path: '/customers/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuotesIndexRoute = AdminQuotesIndexRouteImport.update({
+  id: '/quotes/',
+  path: '/quotes/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuotesIdRoute = AdminQuotesIdRouteImport.update({
+  id: '/quotes/$id',
+  path: '/quotes/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/commission': typeof AdminCommissionRoute
+  '/admin/leads': typeof AdminLeadsRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
+  '/quote/$token': typeof QuoteTokenRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRoute
+  '/admin/quotes/$id': typeof AdminQuotesIdRoute
+  '/admin/customers/': typeof AdminCustomersIndexRoute
+  '/admin/quotes/': typeof AdminQuotesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/commission': typeof AdminCommissionRoute
+  '/admin/leads': typeof AdminLeadsRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
+  '/quote/$token': typeof QuoteTokenRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRoute
+  '/admin/quotes/$id': typeof AdminQuotesIdRoute
+  '/admin/customers': typeof AdminCustomersIndexRoute
+  '/admin/quotes': typeof AdminQuotesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/commission': typeof AdminCommissionRoute
+  '/admin/leads': typeof AdminLeadsRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
+  '/quote/$token': typeof QuoteTokenRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRoute
+  '/admin/quotes/$id': typeof AdminQuotesIdRoute
+  '/admin/customers/': typeof AdminCustomersIndexRoute
+  '/admin/quotes/': typeof AdminQuotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sitemap.xml' | '/carpet-cleaning/$city'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/admin/calendar'
+    | '/admin/commission'
+    | '/admin/leads'
+    | '/admin/pipeline'
+    | '/admin/settings'
+    | '/admin/stats'
+    | '/carpet-cleaning/$city'
+    | '/quote/$token'
+    | '/admin/'
+    | '/admin/customers/$id'
+    | '/admin/quotes/$id'
+    | '/admin/customers/'
+    | '/admin/quotes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml' | '/carpet-cleaning/$city'
-  id: '__root__' | '/' | '/sitemap.xml' | '/carpet-cleaning/$city'
+  to:
+    | '/'
+    | '/sitemap.xml'
+    | '/admin/calendar'
+    | '/admin/commission'
+    | '/admin/leads'
+    | '/admin/pipeline'
+    | '/admin/settings'
+    | '/admin/stats'
+    | '/carpet-cleaning/$city'
+    | '/quote/$token'
+    | '/admin'
+    | '/admin/customers/$id'
+    | '/admin/quotes/$id'
+    | '/admin/customers'
+    | '/admin/quotes'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/admin/calendar'
+    | '/admin/commission'
+    | '/admin/leads'
+    | '/admin/pipeline'
+    | '/admin/settings'
+    | '/admin/stats'
+    | '/carpet-cleaning/$city'
+    | '/quote/$token'
+    | '/admin/'
+    | '/admin/customers/$id'
+    | '/admin/quotes/$id'
+    | '/admin/customers/'
+    | '/admin/quotes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CarpetCleaningCityRoute: typeof CarpetCleaningCityRoute
+  QuoteTokenRoute: typeof QuoteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,12 +234,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/calendar': {
+      id: '/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AdminCalendarRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/commission': {
+      id: '/admin/commission'
+      path: '/commission'
+      fullPath: '/admin/commission'
+      preLoaderRoute: typeof AdminCommissionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/leads': {
+      id: '/admin/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AdminLeadsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pipeline': {
+      id: '/admin/pipeline'
+      path: '/pipeline'
+      fullPath: '/admin/pipeline'
+      preLoaderRoute: typeof AdminPipelineRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/stats': {
+      id: '/admin/stats'
+      path: '/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AdminStatsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/carpet-cleaning/$city': {
       id: '/carpet-cleaning/$city'
@@ -82,13 +304,80 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarpetCleaningCityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quote/$token': {
+      id: '/quote/$token'
+      path: '/quote/$token'
+      fullPath: '/quote/$token'
+      preLoaderRoute: typeof QuoteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/customers/': {
+      id: '/admin/customers/'
+      path: '/customers'
+      fullPath: '/admin/customers/'
+      preLoaderRoute: typeof AdminCustomersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers/$id': {
+      id: '/admin/customers/$id'
+      path: '/customers/$id'
+      fullPath: '/admin/customers/$id'
+      preLoaderRoute: typeof AdminCustomersIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quotes/': {
+      id: '/admin/quotes/'
+      path: '/quotes'
+      fullPath: '/admin/quotes/'
+      preLoaderRoute: typeof AdminQuotesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quotes/$id': {
+      id: '/admin/quotes/$id'
+      path: '/quotes/$id'
+      fullPath: '/admin/quotes/$id'
+      preLoaderRoute: typeof AdminQuotesIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminCommissionRoute: typeof AdminCommissionRoute
+  AdminLeadsRoute: typeof AdminLeadsRoute
+  AdminPipelineRoute: typeof AdminPipelineRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStatsRoute: typeof AdminStatsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminCustomersIdRoute: typeof AdminCustomersIdRoute
+  AdminQuotesIdRoute: typeof AdminQuotesIdRoute
+  AdminCustomersIndexRoute: typeof AdminCustomersIndexRoute
+  AdminQuotesIndexRoute: typeof AdminQuotesIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminCalendarRoute: AdminCalendarRoute,
+  AdminCommissionRoute: AdminCommissionRoute,
+  AdminLeadsRoute: AdminLeadsRoute,
+  AdminPipelineRoute: AdminPipelineRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminStatsRoute: AdminStatsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminCustomersIdRoute: AdminCustomersIdRoute,
+  AdminQuotesIdRoute: AdminQuotesIdRoute,
+  AdminCustomersIndexRoute: AdminCustomersIndexRoute,
+  AdminQuotesIndexRoute: AdminQuotesIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CarpetCleaningCityRoute: CarpetCleaningCityRoute,
+  QuoteTokenRoute: QuoteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

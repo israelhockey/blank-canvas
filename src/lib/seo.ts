@@ -1,5 +1,6 @@
 import { BUSINESS, CITIES, type City } from "./site-data";
 import { FAQ_ITEMS } from "@/components/site/Sections";
+import siteCss from "@/site.css?url";
 
 /**
  * Set SITE_URL to the live domain once it's connected (e.g. "https://simplesurfacetx.com").
@@ -24,7 +25,10 @@ export function pageMeta(opts: { title: string; description: string; path: strin
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: image },
     ],
-    links: SITE_URL ? [{ rel: "canonical", href: abs(opts.path) }] : [],
+    links: [
+      { rel: "stylesheet", href: siteCss },
+      ...(SITE_URL ? [{ rel: "canonical", href: abs(opts.path) }] : []),
+    ],
   };
 }
 
