@@ -30,4 +30,4 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Keep managed email templates and their server-only sender in `src/lib/email-templates`; the authenticated `/lovable/email/transactional/preview` route supports the Emails dashboard without exposing a send endpoint.
-- Keep server environment loading out of client defines and alias React Email's entities imports to the hoisted v4 copy so email rendering bundles safely.
+- Keep server environment loading out of client defines; alias only React Email's legacy entities/lib imports to the hoisted v4 copy, leaving modern entities subpaths to resolve against each importer's compatible version.
