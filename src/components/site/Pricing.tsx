@@ -10,6 +10,7 @@ import {
   SLOTS_PER_WINDOW,
   lineItems,
   money,
+  publicOrigin,
   totals,
   type Quantities,
 } from "@/lib/site-data";
@@ -313,7 +314,7 @@ function BookingForm({ q }: { q: Quantities }) {
           total: t.total,
           page: window.location.pathname,
           source: leadSource(),
-          origin: window.location.origin,
+          origin: publicOrigin(),
           website: honeypot,
         },
       })

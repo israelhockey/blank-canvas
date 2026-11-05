@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { SitePage } from "@/components/site/SitePage";
-import { findCity } from "@/lib/site-data";
+import { cityParam, findCity } from "@/lib/site-data";
 import { businessJsonLd, pageMeta } from "@/lib/seo";
 
 /** City landing pages, e.g. /carpet-cleaning/keller-tx */
@@ -16,9 +16,9 @@ export const Route = createFileRoute("/carpet-cleaning/$city")({
     if (!city) return {};
     return {
       ...pageMeta({
-        title: `Carpet Cleaning in ${city.name}, TX | Simple Surface`,
-        description: `Low-moisture carpet, upholstery and rug cleaning in ${city.name}, TX. Dry in hours, no hoses through your door. Flat $50 per room, no deposit, pay after the job.`,
-        path: `/carpet-cleaning/${city.slug}-tx`,
+        title: `${city.name} Carpet Cleaning | Simple Surface Carpet Cleaning`,
+        description: `Carpet cleaning in ${city.name}, TX from Simple Surface Carpet Cleaning. Low-moisture carpet, upholstery and rug cleaning, dry in hours. Flat $50 per room, no deposit, pay after the job.`,
+        path: `/carpet-cleaning/${cityParam(city)}`,
       }),
       scripts: businessJsonLd(city),
     };

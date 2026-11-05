@@ -18,7 +18,7 @@ import {
 } from "@/lib/admin-data";
 import { accessToken, dbOrThrow } from "@/lib/db";
 import { JOB_STATUSES, type Invoice, type Job, type JobStatus } from "@/lib/db-types";
-import { ARRIVAL_WINDOWS } from "@/lib/site-data";
+import { ARRIVAL_WINDOWS, publicOrigin } from "@/lib/site-data";
 import { Field, StatusPill, fmtDay, isoDate, selectClass, smsHref, telHref, usd } from "./ui";
 
 export function JobDialog({ job, onClose }: { job: Job | null; onClose: () => void }) {
@@ -119,7 +119,7 @@ function JobBody({ job, onClose }: { job: Job; onClose: () => void }) {
         kind,
         to: cust.email,
         name: cust.name,
-        origin: window.location.origin,
+        origin: publicOrigin(),
         number: job.number,
         day: fmtDay(date),
         window: win,

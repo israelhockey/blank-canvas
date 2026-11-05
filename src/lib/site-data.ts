@@ -2,6 +2,8 @@
 
 export const BUSINESS = {
   name: "Simple Surface",
+  brandName: "Simple Surface Carpet Cleaning",
+  domain: "simplesurfacecarpetcleaning.com",
   legalName: "Simple Surface LLC",
   tagline: "Eco-friendly - Low moisture - Steam",
   phoneDisplay: "214-562-3449",
@@ -11,6 +13,14 @@ export const BUSINESS = {
   instagram: "https://www.instagram.com/simplesurfacellc/",
   facebook: "https://www.facebook.com/simplesurfacellc",
 };
+
+/** The live site. Customer links (quotes, emails) always point here, except during local testing. */
+export const SITE_ORIGIN = "https://simplesurfacecarpetcleaning.com";
+export function publicOrigin(): string {
+  if (typeof window === "undefined") return SITE_ORIGIN;
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1" ? window.location.origin : SITE_ORIGIN;
+}
 
 export const TAX = 0.0825;
 export const COMMERCIAL_RATE = 0.25; // dollars per sq ft

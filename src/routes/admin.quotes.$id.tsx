@@ -28,7 +28,7 @@ import {
 } from "@/lib/admin-data";
 import { accessToken, dbOrThrow } from "@/lib/db";
 import type { LineItem, Quote } from "@/lib/db-types";
-import { ITEMS } from "@/lib/site-data";
+import { ITEMS, publicOrigin } from "@/lib/site-data";
 
 export const Route = createFileRoute("/admin/quotes/$id")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -81,9 +81,7 @@ function QuoteEditor() {
   const totals = useMemo(() => sumItems(items), [items]);
   const customer = (customers.data ?? []).find((c) => c.id === customerId);
   const quote = existing.data;
-  const link = quote
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/quote/${quote.token}`
-    : "";
+  const link = quote ? `${publicOrigin()}/quote/${quote.token}` : "";
 
   const save = async (patch: Partial<Quote> = {}): Promise<Quote | null> => {
     if (!customerId) {
@@ -133,7 +131,7 @@ function QuoteEditor() {
           : {},
       );
       if (!saved) return;
-      const url = `${window.location.origin}/quote/${saved.token}`;
+      const url = `${publicOrigin()}/quote/${saved.token}`;
       if (how === "email") {
         if (!customer?.email)
           throw new Error("This customer has no email. Add it on their page, or send by text.");
@@ -143,7 +141,7 @@ function QuoteEditor() {
             kind: "quote",
             to: customer.email,
             name: customer.name,
-            origin: window.location.origin,
+            origin: publicOrigin(),
             link: url,
             number: saved.number,
             title: saved.title ?? "",

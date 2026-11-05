@@ -1,12 +1,9 @@
-import { BUSINESS, CITIES, type City } from "./site-data";
-import { FAQ_ITEMS } from "@/components/site/Sections";
+import { BUSINESS, CITIES, SITE_ORIGIN, cityParam, type City } from "./site-data";
+import { faqFor } from "@/components/site/Sections";
 import siteCss from "@/site.css?url";
 
-/**
- * Set SITE_URL to the live domain once it's connected (e.g. "https://simplesurfacetx.com").
- * It makes share previews and Google's canonical links absolute.
- */
-export const SITE_URL: string = "";
+/** The live domain. Share previews, canonical links and structured data all point here. */
+export const SITE_URL: string = SITE_ORIGIN;
 
 const abs = (path: string) => (SITE_URL ? SITE_URL.replace(/\/$/, "") + path : path);
 
@@ -19,6 +16,8 @@ export function pageMeta(opts: { title: string; description: string; path: strin
       { property: "og:title", content: opts.title },
       { property: "og:description", content: opts.description },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: abs(opts.path) },
+      { property: "og:site_name", content: BUSINESS.brandName },
       { property: "og:image", content: image },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
@@ -38,14 +37,18 @@ export function businessJsonLd(city?: City) {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
     additionalType: "https://en.wikipedia.org/wiki/Carpet_cleaning",
-    name: BUSINESS.legalName,
-    description:
-      "Low-moisture carpet, tile, upholstery and rug cleaning for homes and businesses. Plugs into a standard outlet, no hoses through your door, dry in hours.",
+    "@id": `${SITE_URL}/#business`,
+    name: BUSINESS.brandName,
+    legalName: BUSINESS.legalName,
+    alternateName: [BUSINESS.name, BUSINESS.legalName],
+    description: city
+      ? `Simple Surface Carpet Cleaning provides low-moisture carpet, tile, upholstery and rug cleaning in ${city.name}, TX. Plugs into a standard outlet, no hoses through your door, dry in hours.`
+      : "Simple Surface Carpet Cleaning provides low-moisture carpet, tile, upholstery and rug cleaning for homes and businesses in Fort Worth and Tarrant County, TX. Plugs into a standard outlet, no hoses through your door, dry in hours.",
     telephone: "+1-214-562-3449",
     email: BUSINESS.email,
     image: abs("/og-image.jpg"),
     logo: abs("/brand/logo-full.png"),
-    ...(SITE_URL ? { url: abs(city ? `/carpet-cleaning/${city.slug}-tx` : "/") } : {}),
+    url: abs(city ? `/carpet-cleaning/${cityParam(city)}` : "/"),
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
@@ -67,14 +70,32 @@ export function businessJsonLd(city?: City) {
   const faq = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ_ITEMS.map(([q, a]) => ({
+    mainEntity: faqFor(city).map(([q, a]) => ({
       "@type": "Question",
       name: q,
       acceptedAnswer: { "@type": "Answer", text: a },
     })),
   };
-  return [
+  const out = [
     { type: "application/ld+json", children: JSON.stringify(business) },
     { type: "application/ld+json", children: JSON.stringify(faq) },
   ];
+  if (city)
+    out.push({
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Fort Worth Carpet Cleaning", item: abs("/") },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: `${city.name} Carpet Cleaning`,
+            item: abs(`/carpet-cleaning/${cityParam(city)}`),
+          },
+        ],
+      }),
+    });
+  return out;
 }

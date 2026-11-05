@@ -6,9 +6,9 @@ import { businessJsonLd, pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/")({
   head: () => ({
     ...pageMeta({
-      title: "Simple Surface | Carpet & Upholstery Cleaning in Fort Worth, TX",
+      title: "Fort Worth Carpet Cleaning | Simple Surface Carpet Cleaning",
       description:
-        "Low-moisture carpet, tile, upholstery and rug cleaning in Fort Worth. Plugs into a standard outlet, no hoses through your door, dry in hours. Flat $50 per room, no deposit.",
+        "Simple Surface Carpet Cleaning: low-moisture carpet, upholstery, rug and tile cleaning in Fort Worth and Tarrant County, TX. Dry in hours, no hoses through your door. Flat $50 per room, no deposit.",
       path: "/",
     }),
     scripts: businessJsonLd(),

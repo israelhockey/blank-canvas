@@ -11,7 +11,18 @@ export const Route = createFileRoute("/quote/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Your quote | Simple Surface" },
+      { title: "Your quote | Simple Surface Carpet Cleaning" },
+      { property: "og:title", content: "Your quote from Simple Surface Carpet Cleaning" },
+      {
+        name: "description",
+        content:
+          "View your carpet cleaning quote, pick a time and accept it online. No deposit, pay after the job.",
+      },
+      {
+        property: "og:description",
+        content:
+          "View your carpet cleaning quote, pick a time and accept it online. No deposit, pay after the job.",
+      },
       { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "stylesheet", href: siteCss }],

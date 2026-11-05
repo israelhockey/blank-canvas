@@ -21,6 +21,7 @@ import { sendCustomerEmail } from "@/lib/admin.functions";
 import { fetchJobs, fetchLeads, logActivity, useRefresh } from "@/lib/admin-data";
 import { accessToken, dbOrThrow } from "@/lib/db";
 import type { Customer, Job, Task } from "@/lib/db-types";
+import { publicOrigin } from "@/lib/site-data";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
@@ -98,7 +99,7 @@ function Dashboard() {
           kind: "reminder",
           to: j.customers.email,
           name: j.customers.name,
-          origin: window.location.origin,
+          origin: publicOrigin(),
           day: fmtDay(j.scheduled_date),
           window: j.arrival_window ?? "",
           items: j.items,
@@ -131,8 +132,8 @@ function Dashboard() {
         kind: "repeat",
         to: c.email,
         name: c.name,
-        origin: window.location.origin,
-        link: window.location.origin,
+        origin: publicOrigin(),
+        link: publicOrigin(),
       },
     });
     if (!r.ok) {

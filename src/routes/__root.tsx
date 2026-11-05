@@ -79,15 +79,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Simple Surface | Carpet & Upholstery Cleaning in Fort Worth, TX" },
+      { title: "Fort Worth Carpet Cleaning | Simple Surface Carpet Cleaning" },
       {
         name: "description",
         content:
-          "Low-moisture carpet, tile, upholstery and rug cleaning in Fort Worth. Plugs into a standard outlet, no hoses through your door, dry in hours.",
+          "Simple Surface Carpet Cleaning: low-moisture carpet, tile, upholstery and rug cleaning in Fort Worth, TX. Plugs into a standard outlet, no hoses through your door, dry in hours.",
       },
       { name: "theme-color", content: "#0f1f38" },
-      { property: "og:site_name", content: "Simple Surface" },
+      { property: "og:site_name", content: "Simple Surface Carpet Cleaning" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://simplesurfacecarpetcleaning.com/og-image.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -100,6 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/brand/mark-192.png", type: "image/png", sizes: "192x192" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),

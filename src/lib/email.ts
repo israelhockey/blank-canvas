@@ -104,7 +104,8 @@ export function brandedLayout(opts: {
     }
   </div>
   <div style="padding:16px 24px;border-top:1px solid #dde3ec;color:#56627a;font-size:13px;line-height:1.5">
-    Simple Surface LLC · Fort Worth, TX · 214-562-3449<br>
+    Simple Surface Carpet Cleaning · Fort Worth, TX · 214-562-3449<br>
+    <a href="https://simplesurfacecarpetcleaning.com" style="color:#1650ec;text-decoration:none">simplesurfacecarpetcleaning.com</a><br>
     Eco-friendly · Low moisture · Steam · 100% Customer Satisfaction Guarantee
   </div>
 </div></div>`;

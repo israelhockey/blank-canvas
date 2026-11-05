@@ -59,7 +59,7 @@ export function Header() {
   return (
     <header className="site">
       <div className="wrap">
-        <Link className="brand" to="/" aria-label="Simple Surface home">
+        <Link className="brand" to="/" aria-label="Simple Surface Carpet Cleaning home">
           <BrandMark />
           <span>
             <b>Simple Surface</b>
@@ -130,28 +130,30 @@ export function Hero({ city }: { city?: City | undefined }) {
       <div className="wrap hero-in">
         {city ? (
           <>
-            <p className="eyebrow">{city.name}, TX · Low-moisture carpet cleaning</p>
+            <p className="eyebrow">Simple Surface Carpet Cleaning · {city.name}, TX</p>
             <h1>
               Carpet cleaning in {city.name}. <span className="dry">Dry by dinner.</span>
             </h1>
             <p className="lede">
-              Low-moisture steam cleaning for {city.name} homes and businesses. Plugs into one wall
-              outlet, no hoses through your door, and floors you can walk on the same day.
+              Low-moisture carpet and upholstery cleaning for {city.name} homes and businesses.
+              Plugs into one wall outlet, no hoses through your door, and floors you can walk on the
+              same day.
             </p>
           </>
         ) : (
           <>
             <p className="eyebrow">
-              Fort Worth<span className="hide-sm"> · Carpet · Tile · Upholstery · Rugs</span>
-              <span className="show-sm"> · Low-moisture cleaning</span>
+              Simple Surface Carpet Cleaning
+              <span className="hide-sm"> · Fort Worth, TX · Carpet · Tile · Upholstery · Rugs</span>
+              <span className="show-sm"> · Fort Worth, TX</span>
             </p>
             <h1>
-              Clean carpet. <span className="dry">Dry by dinner.</span>
+              Fort Worth carpet cleaning. <span className="dry">Dry by dinner.</span>
             </h1>
             <p className="lede">
-              Low-moisture steam cleaning that runs off a standard wall outlet. No truck idling in
-              your driveway, no hoses through your front door, and floors you can walk on the same
-              day.
+              Low-moisture carpet cleaning for Fort Worth and Tarrant County that runs off a
+              standard wall outlet. No truck idling in your driveway, no hoses through your front
+              door, and floors you can walk on the same day.
             </p>
           </>
         )}
@@ -248,7 +250,7 @@ export function CityIntro({ city }: { city: City }) {
             </div>
           </div>
           <Link className="back-dfw" to="/">
-            ← All of Fort Worth &amp; DFW
+            ← Fort Worth carpet cleaning
           </Link>
         </div>
       </div>
@@ -656,7 +658,29 @@ const FAQ: [string, string][] = [
   ],
 ];
 
-export const FAQ_ITEMS = FAQ;
+/** FAQ shown on a page (and mirrored in its structured data). City pages lead with local questions. */
+export function faqFor(city?: City): [string, string][] {
+  const areaList = CITIES.map((c) => c.name).join(", ");
+  if (!city)
+    return [
+      [
+        "What areas does Simple Surface Carpet Cleaning serve?",
+        `We're based in Fort Worth and clean homes and businesses across Tarrant County, including ${areaList}.`,
+      ],
+      ...FAQ,
+    ];
+  return [
+    [
+      `Do you offer carpet cleaning in ${city.name}, TX?`,
+      `Yes. Simple Surface Carpet Cleaning cleans carpet, upholstery, rugs and tile for homes and businesses in ${city.name} and across ${city.county}. Book online in about a minute or call ${BUSINESS.phoneDisplay}.`,
+    ],
+    [
+      `How much does carpet cleaning cost in ${city.name}?`,
+      `${city.name} gets the same flat prices as everywhere we work: $50 per room, $100 for a master suite, and flat prices for sofas, chairs and rugs. No deposit, and you pay after the job. Texas sales tax of 8.25% is added.`,
+    ],
+    ...FAQ,
+  ];
+}
 
 export function AreasFaq({ city }: { city?: City | undefined }) {
   return (
@@ -664,7 +688,11 @@ export function AreasFaq({ city }: { city?: City | undefined }) {
       <div className="wrap two">
         <div id="areas">
           <p className="eyebrow">Service area</p>
-          <h2 style={{ marginTop: 14 }}>Fort Worth &amp; nearby</h2>
+          <h2 style={{ marginTop: 14 }}>
+            {city
+              ? `Carpet cleaning in ${city.name} & nearby`
+              : "Carpet cleaning in Fort Worth & nearby"}
+          </h2>
           <div className="cities">
             {CITIES.map((c, i) => (
               <CityChip key={c.slug} c={c} active={city ? c.slug === city.slug : i === 0} />
@@ -687,7 +715,7 @@ export function AreasFaq({ city }: { city?: City | undefined }) {
           <p className="eyebrow" style={{ marginBottom: 14 }}>
             Questions
           </p>
-          {FAQ.map(([q, a], i) => (
+          {faqFor(city).map(([q, a], i) => (
             <details key={q} open={i === 0}>
               <summary>{q}</summary>
               <p>{a}</p>
@@ -728,8 +756,8 @@ export function Footer() {
             </span>
           </Link>
           <p style={{ marginTop: 14, maxWidth: "34ch" }}>
-            Low-moisture carpet, tile, upholstery and rug cleaning for homes and businesses in Fort
-            Worth and nearby.
+            Simple Surface Carpet Cleaning: low-moisture carpet, tile, upholstery and rug cleaning
+            for homes and businesses in Fort Worth and Tarrant County, TX.
           </p>
         </div>
         <div>
