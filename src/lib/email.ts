@@ -58,6 +58,8 @@ export async function sendEmail(opts: {
         ...(cc.length ? { cc: cc.slice(0, 4) } : {}),
         from: { name: SENDER_NAME, address: FROM_ADDRESS },
         sender_domain: SENDER_DOMAIN,
+        purpose: "transactional",
+        idempotency_key: crypto.randomUUID(),
         subject: opts.subject,
         html: opts.html,
         text: opts.text,
