@@ -7,7 +7,12 @@
 import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 
 export const BUSINESS_INBOX = "simplesurfacellc@gmail.com";
-export const SENDER_DOMAIN = "simplesurfacecarpetcleaning.com";
+/**
+ * Lovable sends from a sender subdomain (default "notify"). Override with the EMAIL_SENDER_DOMAIN
+ * secret if the Emails settings in Lovable show a different one.
+ */
+export const SENDER_DOMAIN =
+  process.env["EMAIL_SENDER_DOMAIN"] || "notify.simplesurfacecarpetcleaning.com";
 export const SENDER_NAME = "Simple Surface Carpet Cleaning";
 export const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`;
 
@@ -72,10 +77,13 @@ export async function sendEmail(opts: {
   } catch (e) {
     if (e instanceof EmailAPIError) {
       console.error("Email API error", e.status, e.code ?? "", e.message);
-    } else {
-      console.error("Email send error", e);
+      return {
+        ok: false,
+        error: `Email failed (${e.status}${e.code ? ` ${e.code}` : ""}): ${e.message}`,
+      };
     }
-    return { ok: false, error: "send_failed" };
+    console.error("Email send error", e);
+    return { ok: false, error: `Email failed: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
 
