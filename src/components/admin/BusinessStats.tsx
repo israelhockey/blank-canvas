@@ -97,6 +97,7 @@ const LEAD_KIND: Record<string, string> = {
   partial: "Started booking, didn't finish",
   price_builder: "Saved their price",
   quick_form: "Quick quote",
+  whatsapp: "WhatsApp button",
   walkthrough: "Commercial walkthrough",
   quote: "Quote request",
   contact: "Contact form",
@@ -104,7 +105,7 @@ const LEAD_KIND: Record<string, string> = {
 function leadKind(l: LeadRow) {
   if (l.details?.["partial"]) return "partial";
   const from = l.details?.["from"];
-  if (from === "price_builder" || from === "quick_form") return from;
+  if (from === "price_builder" || from === "quick_form" || from === "whatsapp") return from;
   return l.type;
 }
 

@@ -17,7 +17,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
-import { Route as AdminLinksRouteImport } from './routes/admin.links'
+import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as CalendarFeedTokenRouteImport } from './routes/calendar-feed.$token'
@@ -71,9 +71,9 @@ const AdminCommissionRoute = AdminCommissionRouteImport.update({
   path: '/commission',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminLinksRoute = AdminLinksRouteImport.update({
-  id: '/links',
-  path: '/links',
+const AdminMarketingRoute = AdminMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -146,7 +146,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
-  '/admin/links': typeof AdminLinksRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
@@ -168,7 +168,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
-  '/admin/links': typeof AdminLinksRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
@@ -192,7 +192,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
-  '/admin/links': typeof AdminLinksRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
@@ -217,7 +217,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
-    | '/admin/links'
+    | '/admin/marketing'
     | '/admin/settings'
     | '/admin/stats'
     | '/calendar-feed/$token'
@@ -239,7 +239,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
-    | '/admin/links'
+    | '/admin/marketing'
     | '/admin/settings'
     | '/admin/stats'
     | '/calendar-feed/$token'
@@ -262,7 +262,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
-    | '/admin/links'
+    | '/admin/marketing'
     | '/admin/settings'
     | '/admin/stats'
     | '/calendar-feed/$token'
@@ -350,11 +350,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommissionRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/links': {
-      id: '/admin/links'
-      path: '/links'
-      fullPath: '/admin/links'
-      preLoaderRoute: typeof AdminLinksRouteImport
+    '/admin/marketing': {
+      id: '/admin/marketing'
+      path: '/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AdminMarketingRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/settings': {
@@ -447,7 +447,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminCommissionRoute: typeof AdminCommissionRoute
-  AdminLinksRoute: typeof AdminLinksRoute
+  AdminMarketingRoute: typeof AdminMarketingRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStatsRoute: typeof AdminStatsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -460,7 +460,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminCommissionRoute: AdminCommissionRoute,
-  AdminLinksRoute: AdminLinksRoute,
+  AdminMarketingRoute: AdminMarketingRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStatsRoute: AdminStatsRoute,
   AdminIndexRoute: AdminIndexRoute,

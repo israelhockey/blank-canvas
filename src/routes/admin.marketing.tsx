@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveSetting, useRefresh, useSettings, type TrackingLink } from "@/lib/admin-data";
 import { dbOrThrow } from "@/lib/db";
+import { CAPTIONS, RESOURCES } from "@/lib/marketing-content";
 import { CITIES, SITE_ORIGIN, cityParam } from "@/lib/site-data";
 
-export const Route = createFileRoute("/admin/links")({ component: LinksPage });
+export const Route = createFileRoute("/admin/marketing")({ component: LinksPage });
 
 const CHANNELS = [
   ["facebook-group", "Facebook group post"],
@@ -91,6 +92,7 @@ function LinksPage() {
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<string>("facebook-group");
   const [dest, setDest] = useState("/");
+  const [capLink, setCapLink] = useState("");
   const slug = slugify(name);
   const taken = links.some((l) => l.slug === slug);
 
@@ -134,11 +136,11 @@ function LinksPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Post links"
+        title="Marketing"
         sub="Make one link per place you post. Every visit, lead and paid job from it is counted below and on Stats."
       />
 
-      <Panel title="New link">
+      <Panel title="1. Make a link for each place you post">
         <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_1fr_auto] md:items-end">
           <Field label="Where are you posting it?">
             <Input
@@ -186,7 +188,7 @@ function LinksPage() {
         </p>
       </Panel>
 
-      <Panel title={`Your links (${links.length})`}>
+      <Panel title={`Your links and what they brought in (${links.length})`}>
         {links.length ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -256,6 +258,74 @@ function LinksPage() {
             <Empty>No links yet. Make one for each group or page you post in.</Empty>
           </div>
         )}
+      </Panel>
+
+      <Panel
+        title="Captions to copy"
+        actions={
+          <select
+            className={`${selectClass} w-56`}
+            value={capLink}
+            onChange={(e) => setCapLink(e.target.value)}
+            aria-label="Link to put in the captions"
+          >
+            <option value="">Pick a link to fill in…</option>
+            {links.map((l) => (
+              <option key={l.slug} value={l.slug}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        }
+      >
+        <p className="mb-3 text-sm text-muted-foreground">
+          Pick the group's link at the top right, then tap Copy: it puts that link where the caption
+          says [POST LINK]. Flyer codes (A1, A2…) match the designs.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          {CAPTIONS.map((c) => {
+            const text = capLink ? c.text.replaceAll("[POST LINK]", fullUrl(capLink)) : c.text;
+            return (
+              <div key={c.id} className="flex flex-col gap-2 rounded-lg border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold">
+                    {c.id !== "share" && (
+                      <span className="mr-1.5 rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+                        {c.id}
+                      </span>
+                    )}
+                    {c.title}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      void navigator.clipboard
+                        .writeText(text)
+                        .then(() => toast.success("Caption copied"))
+                    }
+                  >
+                    Copy
+                  </Button>
+                </div>
+                <p className="whitespace-pre-line text-sm text-muted-foreground">{text}</p>
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
+
+      <Panel title="Marketing tools">
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {RESOURCES.map((r) => (
+            <li key={r.href} className="rounded-lg border p-3 text-sm">
+              <a href={r.href} target="_blank" rel="noreferrer" className="font-semibold underline">
+                {r.label}
+              </a>
+              <p className="mt-1 text-muted-foreground">{r.note}</p>
+            </li>
+          ))}
+        </ul>
       </Panel>
     </div>
   );

@@ -453,6 +453,7 @@ function leadTitle(l: Lead) {
   if (d["partial"]) return "Didn't finish booking: call them";
   if (d["from"] === "price_builder") return "Saved their price: call to book";
   if (d["from"] === "quick_form") return "Quick quote: text them a price";
+  if (d["from"] === "whatsapp") return "WhatsApp lead: reply on WhatsApp";
   return LEAD_LABEL[l.type] ?? l.type;
 }
 

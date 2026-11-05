@@ -304,7 +304,9 @@ export const quoteAccepted = createServerFn({ method: "POST" })
 /* ---------- Quick quote / "send me this price" ---------- */
 
 const quickSchema = z.object({
-  mode: z.enum(["quick", "price"]),
+  mode: z.enum(["quick", "price", "whatsapp"]),
+  address: z.string().trim().max(200).optional().default(""),
+  notes: z.string().trim().max(1000).optional().default(""),
   name: z.string().trim().min(2).max(120),
   phone,
   email: z.string().trim().max(200).optional().default(""),
@@ -338,15 +340,28 @@ export const submitQuickLead = createServerFn({ method: "POST" })
       ["Email", data.email],
       ["Wants", what],
       ...(priced ? ([["Their price", `${usd(data.total)} with tax`]] as [string, string][]) : []),
-      ["Form", data.mode === "price" ? "Send me this price (price builder)" : "Quick quote"],
+      ["Address", data.address],
+      ["Notes", data.notes],
+      [
+        "Form",
+        data.mode === "price"
+          ? "Send me this price (price builder)"
+          : data.mode === "whatsapp"
+            ? "WhatsApp button (they were sent to WhatsApp to message you)"
+            : "Quick quote",
+      ],
       ["Page", data.page],
       ["Came from", data.source],
     ];
     const alert = await sendEmail({
       to: notifyList(),
-      subject: `${data.mode === "price" ? "Price saved" : "Quick quote"}: ${data.name} (${what}) · call now`,
+      subject: `${data.mode === "price" ? "Price saved" : data.mode === "whatsapp" ? "WhatsApp lead" : "Quick quote"}: ${data.name} (${what}) · call now`,
       html: alertLayout(
-        data.mode === "price" ? "Wants this price: call to book" : "Quick quote request: call now",
+        data.mode === "price"
+          ? "Wants this price: call to book"
+          : data.mode === "whatsapp"
+            ? "WhatsApp lead: check WhatsApp, or call now"
+            : "Quick quote request: call now",
         `<table style="border-collapse:collapse;font-size:15px">${detailRows(pairs)}</table>
 <p style="margin-top:20px">${button(`tel:${data.phone.replace(/[^\d+]/g, "")}`, `Call ${data.name}`)}${button(adminLink(customerId), "Open in back office", "#0f1f38")}</p>`,
       ),

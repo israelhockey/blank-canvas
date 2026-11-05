@@ -112,6 +112,14 @@ export function decodeQuantities(s: string): Quantities | null {
   return any ? q : null;
 }
 
+/**
+ * WhatsApp number that receives "Message us on WhatsApp" leads (country code + number, digits only).
+ * WhatsApp click-to-chat goes to one number; the team alert email covers everyone else.
+ */
+export const WHATSAPP_NUMBER = "12145623449";
+export const whatsappHref = (text: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+
 /** Opens the customer's texting app with a message ready to send. */
 export const textUsHref = (body = "Hi! I'd like a quote for carpet cleaning.") =>
   `sms:+12145623449?&body=${encodeURIComponent(body)}`;
