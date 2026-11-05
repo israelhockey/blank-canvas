@@ -78,6 +78,9 @@ const TONES: Record<string, string> = {
   spam: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
   draft: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
   pending: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+  failed: "bg-red-600 text-white",
+  suppressed: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  unpaid: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
 };
 
 export function StatusPill({ value, className }: { value: string; className?: string }) {

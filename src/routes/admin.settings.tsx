@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Field, PageHeader, Panel, selectClass } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { squareStatus } from "@/lib/admin.functions";
+import { sendTestEmail, squareStatus } from "@/lib/admin.functions";
 import { saveSetting, useRefresh, useSettings } from "@/lib/admin-data";
 import { accessToken, dbOrThrow } from "@/lib/db";
 import type { CommissionRule, TeamInvite, TeamMember } from "@/lib/db-types";
@@ -18,6 +18,8 @@ function SettingsPage() {
   const settings = useSettings();
   const refresh = useRefresh();
   const sq = useServerFn(squareStatus);
+  const testEmail = useServerFn(sendTestEmail);
+  const [testing, setTesting] = useState(false);
 
   const [rule, setRule] = useState<CommissionRule>({ type: "percent", value: 20 });
   const [review, setReview] = useState("");
@@ -117,6 +119,24 @@ function SettingsPage() {
                 className="w-32"
               />
             </Field>
+            <div className="flex items-center gap-3 border-t pt-3">
+              <Button
+                variant="outline"
+                disabled={testing}
+                onClick={async () => {
+                  setTesting(true);
+                  const r = await testEmail({ data: { auth: await accessToken() } }).catch(
+                    (e: Error) => ({ ok: false as const, error: e.message }),
+                  );
+                  setTesting(false);
+                  if (r.ok) toast.success(`Test email sent to ${r.to}`);
+                  else toast.error(r.error, { duration: 15000 });
+                }}
+              >
+                {testing ? "Sending…" : "Send me a test email"}
+              </Button>
+              <span className="text-xs text-muted-foreground">Checks that email is set up.</span>
+            </div>
           </div>
         </Panel>
       </div>

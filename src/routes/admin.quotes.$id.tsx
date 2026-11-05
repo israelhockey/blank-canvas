@@ -143,6 +143,8 @@ function QuoteEditor() {
             name: customer.name,
             origin: publicOrigin(),
             link: url,
+            customerId: saved.customer_id,
+            ...(saved.job_id ? { jobId: saved.job_id } : {}),
             number: saved.number,
             title: saved.title ?? "",
             notes: saved.notes ?? "",
@@ -164,13 +166,15 @@ function QuoteEditor() {
         await navigator.clipboard.writeText(url).catch(() => undefined);
         toast.success("Link copied. Opening your texts…");
         if (customer?.phone)
-          window.location.href = `${smsHref(customer.phone)}?&body=${encodeURIComponent(`Hi ${customer.name.split(" ")[0]}, here's your Simple Surface quote: ${url}`)}`;
+          window.location.href = `${smsHref(customer.phone)}?&body=${encodeURIComponent(`Hi ${customer.name.split(" ")[0]}, here's your Simple Surface Carpet Cleaning quote: ${url}`)}`;
       }
-      await logActivity({
-        customer_id: saved.customer_id,
-        kind: how === "email" ? "email" : "text",
-        body: `Sent quote #${saved.number} (${usd(saved.total)})`,
-      });
+      // Emails are recorded by the server; log texts here.
+      if (how !== "email")
+        await logActivity({
+          customer_id: saved.customer_id,
+          kind: "text",
+          body: `Texted quote #${saved.number} (${usd(saved.total)})`,
+        });
       await setCustomerStage(saved.customer_id, "quoted").catch(() => undefined);
       await refresh();
     } catch (e) {

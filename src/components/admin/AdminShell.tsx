@@ -6,8 +6,6 @@ import {
   CalendarDays,
   FileText,
   HandCoins,
-  Inbox,
-  KanbanSquare,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,11 +21,9 @@ import { db, isDbConfigured } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/leads", label: "Leads", icon: Inbox },
+  { to: "/admin", label: "Home", icon: LayoutDashboard, exact: true },
   { to: "/admin/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/admin/customers", label: "Customers", icon: Users },
-  { to: "/admin/pipeline", label: "Pipeline", icon: KanbanSquare },
   { to: "/admin/quotes", label: "Quotes", icon: FileText },
   { to: "/admin/stats", label: "Site stats", icon: BarChart3 },
   { to: "/admin/commission", label: "Commission", icon: HandCoins },

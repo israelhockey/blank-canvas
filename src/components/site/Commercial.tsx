@@ -78,10 +78,12 @@ export function Commercial() {
                   details: { business, type, sqft: size, frequency: fq.label, perClean, perYear },
                 },
               })
-              .then(({ error }) => !error)
-          : Promise.resolve(false);
+              .then(({ data, error }) => (error ? null : (data as string)))
+          : Promise.resolve(null);
+      const leadId = await Promise.resolve(saved).catch(() => null);
       const emailed = send({
         data: {
+          ...(leadId ? { leadId } : {}),
           business,
           type,
           name,
@@ -97,11 +99,8 @@ export function Commercial() {
       })
         .then((r) => r.ok)
         .catch(() => false);
-      const [dbOk, mailOk] = await Promise.all([
-        Promise.resolve(saved).catch(() => false),
-        emailed,
-      ]);
-      if (!dbOk && !mailOk) throw new Error("not sent");
+      const mailOk = await emailed;
+      if (!leadId && !mailOk) throw new Error("not sent");
       track("walkthrough_submit", type, { sqft: size });
       setDoneText(
         `${business}, about ${Math.max(0, sqft || 0).toLocaleString()} sq ft. We'll call ${phone} to set up a free walkthrough.`,

@@ -15,8 +15,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
-import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
-import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
@@ -55,16 +53,6 @@ const AdminCalendarRoute = AdminCalendarRouteImport.update({
 const AdminCommissionRoute = AdminCommissionRouteImport.update({
   id: '/commission',
   path: '/commission',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLeadsRoute = AdminLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPipelineRoute = AdminPipelineRouteImport.update({
-  id: '/pipeline',
-  path: '/pipeline',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -120,8 +108,6 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
-  '/admin/leads': typeof AdminLeadsRoute
-  '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
@@ -138,8 +124,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
-  '/admin/leads': typeof AdminLeadsRoute
-  '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
@@ -158,8 +142,6 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
-  '/admin/leads': typeof AdminLeadsRoute
-  '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
@@ -179,8 +161,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/calendar'
     | '/admin/commission'
-    | '/admin/leads'
-    | '/admin/pipeline'
     | '/admin/settings'
     | '/admin/stats'
     | '/carpet-cleaning/$city'
@@ -197,8 +177,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/calendar'
     | '/admin/commission'
-    | '/admin/leads'
-    | '/admin/pipeline'
     | '/admin/settings'
     | '/admin/stats'
     | '/carpet-cleaning/$city'
@@ -216,8 +194,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/calendar'
     | '/admin/commission'
-    | '/admin/leads'
-    | '/admin/pipeline'
     | '/admin/settings'
     | '/admin/stats'
     | '/carpet-cleaning/$city'
@@ -281,20 +257,6 @@ declare module '@tanstack/react-router' {
       path: '/commission'
       fullPath: '/admin/commission'
       preLoaderRoute: typeof AdminCommissionRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/leads': {
-      id: '/admin/leads'
-      path: '/leads'
-      fullPath: '/admin/leads'
-      preLoaderRoute: typeof AdminLeadsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pipeline': {
-      id: '/admin/pipeline'
-      path: '/pipeline'
-      fullPath: '/admin/pipeline'
-      preLoaderRoute: typeof AdminPipelineRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/settings': {
@@ -366,8 +328,6 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminCommissionRoute: typeof AdminCommissionRoute
-  AdminLeadsRoute: typeof AdminLeadsRoute
-  AdminPipelineRoute: typeof AdminPipelineRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStatsRoute: typeof AdminStatsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -380,8 +340,6 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminCommissionRoute: AdminCommissionRoute,
-  AdminLeadsRoute: AdminLeadsRoute,
-  AdminPipelineRoute: AdminPipelineRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStatsRoute: AdminStatsRoute,
   AdminIndexRoute: AdminIndexRoute,

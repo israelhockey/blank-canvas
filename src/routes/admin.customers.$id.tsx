@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { EmailItem } from "@/components/admin/EmailItem";
 import { JobDialog } from "@/components/admin/JobDialog";
 import {
   Empty,
@@ -19,10 +21,18 @@ import {
   usd,
 } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { logActivity, setCustomerStage, useRefresh } from "@/lib/admin-data";
-import { dbOrThrow } from "@/lib/db";
+import { sendCustomerEmail } from "@/lib/admin.functions";
+import { accessToken, dbOrThrow } from "@/lib/db";
 import {
   STAGES,
   type Activity,
@@ -34,7 +44,8 @@ import {
   type Stage,
   type Task,
 } from "@/lib/db-types";
-import { ARRIVAL_WINDOWS } from "@/lib/site-data";
+import { ARRIVAL_WINDOWS, publicOrigin } from "@/lib/site-data";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/customers/$id")({ component: CustomerPage });
 
@@ -202,7 +213,7 @@ function CustomerPage() {
             </Panel>
           </div>
 
-          <Timeline customerId={id} activities={b.activities} leads={b.leads} />
+          <Timeline customer={b.customer} activities={b.activities} leads={b.leads} />
         </div>
       </div>
 
@@ -268,74 +279,110 @@ function Details({ customer, lifetime }: { customer: Customer; lifetime: number 
             ))}
           </select>
         </Field>
-        <Field label="Name">
-          <Input value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
-        </Field>
-        <Field label="Company">
-          <Input
-            value={c.company ?? ""}
-            onChange={(e) => setC({ ...c, company: e.target.value })}
-          />
-        </Field>
-        <Field label="Phone">
-          <Input value={c.phone ?? ""} onChange={(e) => setC({ ...c, phone: e.target.value })} />
-        </Field>
-        <Field label="Email">
-          <Input
-            type="email"
-            value={c.email ?? ""}
-            onChange={(e) => setC({ ...c, email: e.target.value })}
-          />
-        </Field>
-        <Field label="Tags (comma separated)">
-          <Input
-            value={c.tags.join(", ")}
-            onChange={(e) =>
-              setC({
-                ...c,
-                tags: e.target.value
-                  .split(",")
-                  .map((t) => t.trim())
-                  .filter(Boolean),
-              })
-            }
-            placeholder="pets, landlord, gym"
-          />
-        </Field>
-        <Field label="Brought in by">
-          <select
-            className={selectClass}
-            value={c.sourced_by}
-            onChange={(e) => setC({ ...c, sourced_by: e.target.value as Customer["sourced_by"] })}
-          >
-            <option value="partner">Partner (marketing / website)</option>
-            <option value="owner">Owner (his own customer)</option>
-            <option value="unknown">Unknown</option>
-          </select>
-        </Field>
-        <Field label="Next clean due">
-          <Input
-            type="date"
-            value={c.next_service_due ?? ""}
-            onChange={(e) => setC({ ...c, next_service_due: e.target.value })}
-          />
-        </Field>
-        <Field label="Notes">
-          <Textarea
-            rows={3}
-            value={c.notes ?? ""}
-            onChange={(e) => setC({ ...c, notes: e.target.value })}
-          />
-        </Field>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={c.do_not_contact}
-            onChange={(e) => setC({ ...c, do_not_contact: e.target.checked })}
-          />
-          Do not contact
-        </label>
-        <Button onClick={() => void save()}>Save details</Button>
+        <dl className="grid grid-cols-[90px_1fr] gap-y-1 text-sm">
+          <dt className="text-muted-foreground">Phone</dt>
+          <dd>
+            {customer.phone ? (
+              <a className="underline" href={telHref(customer.phone)}>
+                {customer.phone}
+              </a>
+            ) : (
+              "–"
+            )}
+          </dd>
+          <dt className="text-muted-foreground">Email</dt>
+          <dd className="truncate">{customer.email || "–"}</dd>
+          {customer.company && (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{customer.company}</dd>
+            </>
+          )}
+          {customer.notes && (
+            <>
+              <dt className="text-muted-foreground">Notes</dt>
+              <dd className="whitespace-pre-line">{customer.notes}</dd>
+            </>
+          )}
+        </dl>
+        <details className="rounded-lg border p-3" open={!customer.email && !customer.phone}>
+          <summary className="cursor-pointer text-sm font-semibold">Edit contact info</summary>
+          <div className="mt-3 grid gap-3">
+            <Field label="Name">
+              <Input value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
+            </Field>
+            <Field label="Company">
+              <Input
+                value={c.company ?? ""}
+                onChange={(e) => setC({ ...c, company: e.target.value })}
+              />
+            </Field>
+            <Field label="Phone">
+              <Input
+                value={c.phone ?? ""}
+                onChange={(e) => setC({ ...c, phone: e.target.value })}
+              />
+            </Field>
+            <Field label="Email">
+              <Input
+                type="email"
+                value={c.email ?? ""}
+                onChange={(e) => setC({ ...c, email: e.target.value })}
+              />
+            </Field>
+            <Field label="Tags (comma separated)">
+              <Input
+                value={c.tags.join(", ")}
+                onChange={(e) =>
+                  setC({
+                    ...c,
+                    tags: e.target.value
+                      .split(",")
+                      .map((t) => t.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="pets, landlord, gym"
+              />
+            </Field>
+            <Field label="Brought in by">
+              <select
+                className={selectClass}
+                value={c.sourced_by}
+                onChange={(e) =>
+                  setC({ ...c, sourced_by: e.target.value as Customer["sourced_by"] })
+                }
+              >
+                <option value="partner">Partner (marketing / website)</option>
+                <option value="owner">Owner (his own customer)</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </Field>
+            <Field label="Next clean due">
+              <Input
+                type="date"
+                value={c.next_service_due ?? ""}
+                onChange={(e) => setC({ ...c, next_service_due: e.target.value })}
+              />
+            </Field>
+            <Field label="Notes">
+              <Textarea
+                rows={3}
+                value={c.notes ?? ""}
+                onChange={(e) => setC({ ...c, notes: e.target.value })}
+              />
+            </Field>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={c.do_not_contact}
+                onChange={(e) => setC({ ...c, do_not_contact: e.target.checked })}
+              />
+              Do not contact
+            </label>
+            <Button onClick={() => void save()}>Save details</Button>
+          </div>
+        </details>
       </div>
     </Panel>
   );
@@ -408,77 +455,215 @@ const KIND_LABEL: Record<Activity["kind"], string> = {
   system: "Website",
 };
 
+const LEAD_LABEL: Record<string, string> = {
+  booking: "Booking request",
+  walkthrough: "Commercial walkthrough request",
+  quote: "Quote request",
+  contact: "Contact request",
+};
+
+function leadText(l: Lead) {
+  const d = l.details as Record<string, unknown>;
+  const items = Array.isArray(d["items"])
+    ? (d["items"] as { label: string }[]).map((i) => i.label).join(", ")
+    : "";
+  return [
+    d["day"] ? `Wants ${String(d["day"])}` : "",
+    items,
+    d["total"] ? usd(Number(d["total"])) : "",
+    d["business"] ? String(d["business"]) : "",
+    d["sqft"] ? `${Number(d["sqft"]).toLocaleString()} sq ft` : "",
+    d["notes"] ? `Notes: ${String(d["notes"])}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Everything that happened with this customer, newest first. Emails open to show what was sent. */
 function Timeline({
-  customerId,
+  customer,
   activities,
   leads,
 }: {
-  customerId: string;
+  customer: Customer;
   activities: Activity[];
   leads: Lead[];
 }) {
   const refresh = useRefresh();
+  const [tab, setTab] = useState<"all" | "email">("all");
   const [kind, setKind] = useState<Activity["kind"]>("note");
   const [body, setBody] = useState("");
-  return (
-    <Panel title="History">
-      <div className="mb-4 flex flex-wrap gap-2">
-        <select
-          className={`${selectClass} w-28`}
-          value={kind}
-          onChange={(e) => setKind(e.target.value as Activity["kind"])}
-        >
-          <option value="note">Note</option>
-          <option value="call">Call</option>
-          <option value="text">Text</option>
-          <option value="email">Email</option>
-        </select>
-        <Input
-          className="min-w-48 flex-1"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="What happened? e.g. Left voicemail, wants a quote for stairs"
-        />
-        <Button
-          disabled={!body.trim()}
-          onClick={async () => {
-            await logActivity({ customer_id: customerId, kind, body: body.trim() });
-            setBody("");
-            void refresh();
-          }}
-        >
-          Log
-        </Button>
-      </div>
-      <ol className="space-y-3 border-l pl-4">
-        {activities.map((a) => (
-          <li key={a.id} className="relative text-sm">
-            <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-primary" />
+  const emails = activities.filter((a) => a.kind === "email");
+
+  type Row = { at: string; key: string; node: ReactNode };
+  const rows: Row[] = [];
+  for (const a of tab === "email" ? emails : activities) {
+    rows.push({
+      at: a.created_at,
+      key: a.id,
+      node:
+        a.kind === "email" ? (
+          <EmailItem activity={a} />
+        ) : (
+          <div className="text-sm">
             <div className="text-xs text-muted-foreground">
               {KIND_LABEL[a.kind]} · {fmtDateTime(a.created_at)}
             </div>
             <div className="whitespace-pre-line">{a.body}</div>
-          </li>
-        ))}
-        {leads.map((l) => (
-          <li key={l.id} className="relative text-sm">
-            <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-amber-500" />
+          </div>
+        ),
+    });
+  }
+  if (tab === "all")
+    for (const l of leads)
+      rows.push({
+        at: l.created_at,
+        key: l.id,
+        node: (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30">
             <div className="text-xs text-muted-foreground">
-              Form · {fmtDateTime(l.created_at)} · {l.source || "direct"}
+              Website form · {fmtDateTime(l.created_at)} · {l.source || "direct"}
             </div>
-            <div>
-              {l.type} request{" "}
-              <Link to="/admin/leads" search={{ id: l.id }} className="underline">
-                open
-              </Link>
-            </div>
-          </li>
-        ))}
-        {!activities.length && !leads.length && (
-          <li className="text-sm text-muted-foreground">Nothing yet.</li>
-        )}
-      </ol>
+            <div className="font-medium">{LEAD_LABEL[l.type] ?? l.type}</div>
+            {leadText(l) && <div className="text-muted-foreground">{leadText(l)}</div>}
+          </div>
+        ),
+      });
+  rows.sort((a, b) => b.at.localeCompare(a.at));
+
+  return (
+    <Panel
+      title="History"
+      actions={
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-md border text-sm">
+            {(
+              [
+                ["all", "Everything"],
+                ["email", `Emails (${emails.length})`],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={cn("px-2.5 py-1", tab === k && "bg-primary text-primary-foreground")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <EmailCompose customer={customer} />
+        </div>
+      }
+    >
+      {tab === "all" && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <select
+            className={`${selectClass} w-28`}
+            value={kind}
+            onChange={(e) => setKind(e.target.value as Activity["kind"])}
+          >
+            <option value="note">Note</option>
+            <option value="call">Call</option>
+            <option value="text">Text</option>
+          </select>
+          <Input
+            className="min-w-48 flex-1"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Log a call, text or note. e.g. Left voicemail, wants stairs added"
+          />
+          <Button
+            disabled={!body.trim()}
+            onClick={async () => {
+              await logActivity({ customer_id: customer.id, kind, body: body.trim() });
+              setBody("");
+              void refresh();
+            }}
+          >
+            Log
+          </Button>
+        </div>
+      )}
+      {rows.length ? (
+        <ol className="space-y-2">
+          {rows.map((r) => (
+            <li key={r.key}>{r.node}</li>
+          ))}
+        </ol>
+      ) : (
+        <Empty>{tab === "email" ? "No emails sent yet." : "Nothing yet."}</Empty>
+      )}
     </Panel>
+  );
+}
+
+/** Write a one-off email to the customer, sent in the branded layout and saved to their history. */
+function EmailCompose({ customer }: { customer: Customer }) {
+  const refresh = useRefresh();
+  const send = useServerFn(sendCustomerEmail);
+  const [open, setOpen] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          disabled={!customer.email}
+          title={customer.email ? undefined : "Add an email first"}
+        >
+          Email
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Email {customer.name}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          To {customer.email}. Replies go to the business inbox.
+        </p>
+        <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
+        <Textarea
+          rows={7}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Your message"
+        />
+        <Button
+          disabled={busy || !subject.trim() || !message.trim()}
+          onClick={async () => {
+            setBusy(true);
+            const r = await send({
+              data: {
+                auth: await accessToken(),
+                kind: "custom",
+                to: customer.email!,
+                name: customer.name,
+                origin: publicOrigin(),
+                customerId: customer.id,
+                subject: subject.trim(),
+                message: message.trim(),
+              },
+            }).catch((e: Error) => ({ ok: false as const, error: e.message }));
+            setBusy(false);
+            if (!r.ok) {
+              toast.error(r.error);
+              void refresh();
+              return;
+            }
+            toast.success("Email sent");
+            setSubject("");
+            setMessage("");
+            setOpen(false);
+            void refresh();
+          }}
+        >
+          {busy ? "Sending…" : "Send email"}
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }
 

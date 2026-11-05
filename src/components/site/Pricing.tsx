@@ -270,7 +270,7 @@ function BookingForm({ q }: { q: Quantities }) {
     const honeypot = String(f.get("website") || "");
     setStatus("sending");
     try {
-      // Save to the database and email the team in parallel; either one succeeding is enough.
+      // Save to the database first (so the email can link to it), then email. Either one is enough.
       const c = db();
       const saved =
         c && !honeypot
@@ -297,10 +297,12 @@ function BookingForm({ q }: { q: Quantities }) {
                   },
                 },
               })
-              .then(({ error }) => !error)
-          : Promise.resolve(false);
+              .then(({ data, error }) => (error ? null : (data as string)))
+          : Promise.resolve(null);
+      const leadId = await Promise.resolve(saved).catch(() => null);
       const emailed = send({
         data: {
+          ...(leadId ? { leadId } : {}),
           name,
           phone,
           email,
@@ -320,15 +322,12 @@ function BookingForm({ q }: { q: Quantities }) {
       })
         .then((r) => r.ok)
         .catch(() => false);
-      const [dbOk, mailOk] = await Promise.all([
-        Promise.resolve(saved).catch(() => false),
-        emailed,
-      ]);
-      if (!dbOk && !mailOk) throw new Error("not sent");
+      const mailOk = await emailed;
+      if (!leadId && !mailOk) throw new Error("not sent");
       track("booking_submit", dayLabel, { total: t.total });
       const what = items.map((i) => i.label).join(", ") || "your cleaning";
       setDoneText(
-        `Thanks, ${name.split(" ")[0]}. We got your request for ${what} (${money(t.total, 2)} with tax) on ${pickLabel}. We'll text ${phone} shortly to confirm.`,
+        `Thanks, ${name.split(" ")[0]}. We got your request for ${what} (${money(t.total, 2)} with tax) on ${pickLabel}. We'll confirm by text${email ? " and email" : ""} shortly.`,
       );
       setStatus("done");
     } catch {

@@ -197,7 +197,11 @@ export const getSquareInvoice = createServerFn({ method: "POST" })
 
 const emailSchema = z.object({
   auth: z.string(),
-  kind: z.enum(["quote", "receipt", "review", "reminder", "repeat", "confirm"]),
+  kind: z.enum(["quote", "receipt", "review", "reminder", "repeat", "confirm", "custom"]),
+  customerId: z.string().uuid().optional(),
+  jobId: z.string().uuid().optional(),
+  subject: z.string().max(200).optional().default(""),
+  message: z.string().max(5000).optional().default(""),
   to: z.string().email(),
   name: z.string().max(160),
   origin: z.string().max(200),
@@ -238,7 +242,7 @@ export const sendCustomerEmail = createServerFn({ method: "POST" })
     let text = "";
     switch (data.kind) {
       case "quote":
-        subject = `Your Simple Surface quote #${data.number ?? ""}${data.title ? `: ${data.title}` : ""}`;
+        subject = `Your Simple Surface Carpet Cleaning quote #${data.number ?? ""}${data.title ? `: ${data.title}` : ""}`;
         html = brandedLayout({
           origin: data.origin,
           heading: `Hi ${first}, here's your quote`,
@@ -246,10 +250,10 @@ export const sendCustomerEmail = createServerFn({ method: "POST" })
           body: table + notes,
           cta: { label: "View and accept your quote", href: data.link },
         });
-        text = `Hi ${first}, here's your Simple Surface quote #${data.number ?? ""} for ${usd(data.total)}: ${data.link}`;
+        text = `Hi ${first}, here's your Simple Surface Carpet Cleaning quote #${data.number ?? ""} for ${usd(data.total)}: ${data.link}`;
         break;
       case "receipt":
-        subject = `Receipt from Simple Surface${data.number ? ` · Job #${data.number}` : ""}`;
+        subject = `Receipt from Simple Surface Carpet Cleaning${data.number ? ` · Job #${data.number}` : ""}`;
         html = brandedLayout({
           origin: data.origin,
           heading: `Thank you, ${first}!`,
@@ -290,6 +294,16 @@ export const sendCustomerEmail = createServerFn({ method: "POST" })
         });
         text = `Hi ${first}, time for a fresh clean? Book online: ${data.link || data.origin}`;
         break;
+      case "custom":
+        subject = data.subject || "A message from Simple Surface Carpet Cleaning";
+        html = brandedLayout({
+          origin: data.origin,
+          heading: `Hi ${first},`,
+          intro: "",
+          body: `<p style="margin:0;color:#0f1f38;font-size:15px;line-height:1.6;white-space:pre-line">${esc(data.message)}</p>`,
+        });
+        text = `Hi ${first},\n\n${data.message}\n\nSimple Surface Carpet Cleaning · 214-562-3449`;
+        break;
       case "confirm":
         subject = `You're booked: ${data.day}, ${data.window}`;
         html = brandedLayout({
@@ -301,5 +315,29 @@ export const sendCustomerEmail = createServerFn({ method: "POST" })
         text = `You're booked with Simple Surface: ${data.day}, ${data.window}. Questions: 214-562-3449.`;
         break;
     }
-    return sendEmail({ to: [data.to], subject, html, text });
+    return sendEmail({
+      to: [data.to],
+      subject,
+      html,
+      text,
+      log: { type: data.kind, customerId: data.customerId, jobId: data.jobId },
+    });
+  });
+
+/** Sends a branded test email to the signed-in team member, to check email is working. */
+export const sendTestEmail = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({ auth: z.string() }).parse(d))
+  .handler(async ({ data }) => {
+    const me = await requireTeam(data.auth);
+    const r = await sendEmail({
+      to: [me.email],
+      subject: "Test email from your back office",
+      html: brandedLayout({
+        origin: "https://simplesurfacecarpetcleaning.com",
+        heading: "Email is working",
+        intro: "This is what your customers' emails look like. Replies go to the business inbox.",
+      }),
+      text: "Email is working. This is a test from the Simple Surface back office.",
+    });
+    return r.ok ? { ok: true as const, to: me.email } : r;
   });

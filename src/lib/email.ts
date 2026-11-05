@@ -14,7 +14,8 @@ export const BUSINESS_INBOX = "simplesurfacellc@gmail.com";
 export const SENDER_DOMAIN =
   process.env["EMAIL_SENDER_DOMAIN"] || "notify.simplesurfacecarpetcleaning.com";
 export const SENDER_NAME = "Simple Surface Carpet Cleaning";
-export const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`;
+/** Shown in the From: header; Lovable delivers it through the notify subdomain. */
+export const FROM_ADDRESS = "noreply@simplesurfacecarpetcleaning.com";
 
 export type SendResult = { ok: true } | { ok: false; error: string };
 
@@ -39,23 +40,56 @@ export function canEmailCustomers(): boolean {
   return true;
 }
 
+/** Where a customer email belongs, so it shows in that customer's history. */
+export type EmailLog = {
+  type: string;
+  customerId?: string | null | undefined;
+  jobId?: string | null | undefined;
+  leadId?: string | null | undefined;
+};
+
+/** What we store in activities.body for kind "email" (parsed by the customer page). */
+export type EmailRecord = {
+  v: 1;
+  type: string;
+  to: string;
+  subject: string;
+  status: "sent" | "failed" | "suppressed";
+  error?: string;
+  text: string;
+};
+
 export async function sendEmail(opts: {
   to: string[];
   subject: string;
   html: string;
   text: string;
   replyTo?: string | undefined;
+  /** Dedupes repeats of the same logical email (e.g. one "quote accepted" per quote). */
+  idempotencyKey?: string | undefined;
+  /** Set for customer-facing mail: records it on the customer's history. */
+  log?: EmailLog | undefined;
+}): Promise<SendResult> {
+  const result = await deliver(opts);
+  if (opts.log) await recordEmail(opts, result);
+  return result;
+}
+
+async function deliver(opts: {
+  to: string[];
+  subject: string;
+  html: string;
+  text: string;
+  replyTo?: string | undefined;
+  idempotencyKey?: string | undefined;
 }): Promise<SendResult> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) {
     console.error("LOVABLE_API_KEY is not set");
-    return { ok: false, error: "not_configured" };
+    return { ok: false, error: "Email isn't set up (LOVABLE_API_KEY missing)." };
   }
   const [to, ...cc] = opts.to;
-  if (!to) {
-    console.error("sendEmail called with no recipients");
-    return { ok: false, error: "no_recipient" };
-  }
+  if (!to) return { ok: false, error: "No email address to send to." };
   try {
     await sendLovableEmail(
       {
@@ -64,19 +98,24 @@ export async function sendEmail(opts: {
         from: { name: SENDER_NAME, address: FROM_ADDRESS },
         sender_domain: SENDER_DOMAIN,
         purpose: "transactional",
-        idempotency_key: crypto.randomUUID(),
+        idempotency_key: opts.idempotencyKey || crypto.randomUUID(),
         subject: opts.subject,
         html: opts.html,
         text: opts.text,
         // Customer replies land in the business inbox unless a caller says otherwise.
         reply_to: opts.replyTo ?? BUSINESS_INBOX,
       },
-      { apiKey },
+      { apiKey, sendUrl: process.env["LOVABLE_SEND_URL"] },
     );
     return { ok: true };
   } catch (e) {
     if (e instanceof EmailAPIError) {
       console.error("Email API error", e.status, e.code ?? "", e.message);
+      if (e.code === "recipient_suppressed")
+        return {
+          ok: false,
+          error: "This address unsubscribed or bounced, so it can't be emailed.",
+        };
       return {
         ok: false,
         error: `Email failed (${e.status}${e.code ? ` ${e.code}` : ""}): ${e.message}`,
@@ -84,6 +123,45 @@ export async function sendEmail(opts: {
     }
     console.error("Email send error", e);
     return { ok: false, error: `Email failed: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+/** Saves the email on the customer's history. Never throws: logging must not break sending. */
+async function recordEmail(
+  opts: { to: string[]; subject: string; text: string; log?: EmailLog | undefined },
+  result: SendResult,
+) {
+  const log = opts.log!;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let customerId = log.customerId ?? null;
+    if (!customerId && log.leadId) {
+      const { data } = await supabaseAdmin
+        .from("leads")
+        .select("customer_id")
+        .eq("id", log.leadId)
+        .maybeSingle();
+      customerId = (data as { customer_id: string | null } | null)?.customer_id ?? null;
+    }
+    if (!customerId) return;
+    const rec: EmailRecord = {
+      v: 1,
+      type: log.type,
+      to: opts.to.join(", "),
+      subject: opts.subject,
+      status: result.ok ? "sent" : result.error.includes("unsubscribed") ? "suppressed" : "failed",
+      ...(result.ok ? {} : { error: result.error }),
+      text: opts.text.slice(0, 4000),
+    };
+    await supabaseAdmin.from("activities").insert({
+      customer_id: customerId,
+      job_id: log.jobId ?? null,
+      lead_id: log.leadId ?? null,
+      kind: "email",
+      body: JSON.stringify(rec),
+    });
+  } catch (e) {
+    console.error("Could not record email", e);
   }
 }
 
@@ -122,7 +200,7 @@ export function brandedLayout(opts: {
   </div>
   <div style="padding:26px 24px;color:#0f1f38">
     <h1 style="margin:0 0 10px;font-size:22px;line-height:1.2">${esc(opts.heading)}</h1>
-    <p style="margin:0 0 18px;color:#56627a;font-size:15px;line-height:1.55">${esc(opts.intro)}</p>
+    ${opts.intro ? `<p style="margin:0 0 18px;color:#56627a;font-size:15px;line-height:1.55">${esc(opts.intro)}</p>` : ""}
     ${opts.body ?? ""}
     ${
       opts.cta

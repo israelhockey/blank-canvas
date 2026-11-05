@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
 import { db } from "@/lib/db";
+import { quoteAccepted } from "@/lib/leads.functions";
 import { ARRIVAL_WINDOWS, BUSINESS, money } from "@/lib/site-data";
 import { track } from "@/lib/track";
 import siteCss from "@/site.css?url";
@@ -66,6 +68,7 @@ function QuotePage() {
   const [slot, setSlot] = useState<string | null>(null);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [err, setErr] = useState("");
+  const notifyAccepted = useServerFn(quoteAccepted);
 
   useEffect(() => {
     const c = db();
@@ -96,6 +99,9 @@ function QuotePage() {
     }
     track("quote_accept", `#${q?.number}`, { total: q?.total });
     setState("done");
+    // Emails the customer a confirmation and alerts the team. Fire and forget.
+    if (!(r as { already?: boolean }).already)
+      void notifyAccepted({ data: { token } }).catch(() => undefined);
   };
 
   if (q === undefined)
@@ -177,8 +183,8 @@ function QuotePage() {
             <div>
               <h3>Quote accepted</h3>
               <p>
-                Thank you! We'll text you to lock in the time. Questions? Call or text{" "}
-                {BUSINESS.phoneDisplay}.
+                Thank you! A confirmation is on its way to your email, and we'll reach out shortly
+                to lock in the time. Questions? Call or text {BUSINESS.phoneDisplay}.
               </p>
             </div>
           </div>
