@@ -304,11 +304,11 @@ export const quoteAccepted = createServerFn({ method: "POST" })
 /* ---------- Quick quote / "send me this price" ---------- */
 
 const quickSchema = z.object({
-  mode: z.enum(["quick", "price", "whatsapp"]),
+  mode: z.enum(["quick", "price", "whatsapp", "guide"]),
   address: z.string().trim().max(200).optional().default(""),
   notes: z.string().trim().max(1000).optional().default(""),
   name: z.string().trim().min(2).max(120),
-  phone,
+  phone: z.string().trim().max(40).optional().default(""),
   email: z.string().trim().max(200).optional().default(""),
   wants: z.array(z.string().max(40)).max(10).optional().default([]),
   items: z.array(z.object({ label: z.string().max(120), amount: z.number() })).max(30),
@@ -327,7 +327,18 @@ export const submitQuickLead = createServerFn({ method: "POST" })
   .validator((d: unknown) => quickSchema.parse(d))
   .handler(async ({ data }): Promise<SendResult> => {
     if (data.website) return { ok: true };
+    const phoneDigits = data.phone.replace(/\D/g, "").length;
+    if (data.mode === "guide" ? !looksLikeEmail(data.email) : phoneDigits < 10)
+      return { ok: false, error: "Missing contact details." };
     const customerId = await customerForLead(data.leadId);
+    if (data.mode === "guide")
+      return sendStainGuide(
+        data.name,
+        data.email,
+        data.phone,
+        customerId,
+        data.leadId ?? (await saveEmailOnlyLead(data.name, data.email, data.page, data.source)),
+      );
     const priced = data.items.length > 0;
     const bookLink = `${SITE_ORIGIN}/${data.q ? `?q=${encodeURIComponent(data.q)}` : ""}#book`;
     const what = priced
@@ -399,3 +410,100 @@ export const submitQuickLead = createServerFn({ method: "POST" })
     }
     return alert;
   });
+
+const STAIN_TIPS: [string, string][] = [
+  ["Red wine", "Blot right away, pour a little cold water on it and keep blotting. Never rub."],
+  [
+    "Gravy & grease",
+    "Scrape up what you can, then blot with a drop of dish soap in warm water. Rinse with plain water.",
+  ],
+  ["Coffee & tea", "Blot, then dab with cold water and a little white vinegar. Blot dry."],
+  [
+    "Cranberry sauce",
+    "Scoop it up with a spoon, then blot with cold water. Don't use heat: it sets the red.",
+  ],
+  [
+    "Candle wax",
+    "Let it harden, scrape off what you can, then lay a paper towel over it and press with a warm iron.",
+  ],
+  ["Mud", "Let it dry completely, then vacuum it up before treating any leftover mark."],
+  [
+    "Pet accidents",
+    "Blot hard, rinse with cold water, then use an enzyme cleaner made for pet urine. Skip ammonia.",
+  ],
+  ["Chocolate", "Let it harden, scrape, then blot with a drop of dish soap in cool water."],
+  [
+    "Kids' juice & soda",
+    "Blot with cold water. A little dish soap helps lift the sugar so it doesn't attract dirt.",
+  ],
+  [
+    "Any stain",
+    "Work from the outside in, use white towels only, and test cleaners on a hidden spot first.",
+  ],
+];
+
+async function sendStainGuide(
+  name: string,
+  email: string,
+  phone: string,
+  customerId: string | null,
+  leadId: string | undefined,
+): Promise<SendResult> {
+  const first = name.split(" ")[0] || name;
+  const rows = STAIN_TIPS.map(
+    ([h, t], i) =>
+      `<tr><td style="padding:12px 0;border-bottom:1px solid #e3e8f0;vertical-align:top;width:34px;font-weight:800;color:#1650ec;font-size:18px">${i + 1}</td><td style="padding:12px 0;border-bottom:1px solid #e3e8f0"><b style="color:#0f1f38;font-size:16px">${esc(h)}</b><br><span style="color:#46546e;font-size:15px;line-height:1.5">${esc(t)}</span></td></tr>`,
+  ).join("");
+  await sendEmail({
+    to: notifyList(),
+    subject: `Stain guide download: ${name}${phone ? ` (${phone})` : ""}`,
+    html: alertLayout(
+      "Someone downloaded the Holiday Stain Guide",
+      `<table style="border-collapse:collapse;font-size:15px">${detailRows([
+        ["Name", name],
+        ["Email", email],
+        ["Phone", phone],
+      ])}</table><p style="margin-top:16px">A warm lead: follow up before the holidays.</p><p>${button(adminLink(customerId), "Open in back office")}</p>`,
+    ),
+    text: `Stain guide download: ${name} ${email} ${phone}`,
+    replyTo: email,
+  });
+  return sendEmail({
+    to: [email],
+    subject: "Your Holiday Stain Guide: 10 quick fixes",
+    html: brandedLayout({
+      origin: SITE_ORIGIN,
+      heading: `Here's your stain guide, ${first}`,
+      intro:
+        "Save this one for the holidays. The golden rule: blot, don't rub, and use cold water first.",
+      body: `<table style="border-collapse:collapse;width:100%">${rows}</table><p style="margin:18px 0 0;color:#46546e;font-size:15px">Stain still there? Text a photo to 214-562-3449 and we'll tell you if we can get it out. Rooms are a flat $50, no deposit.</p>`,
+      cta: { label: "See your price", href: `${SITE_ORIGIN}/#pricing` },
+    }),
+    text: `Your Holiday Stain Guide\n\n${STAIN_TIPS.map(([h, t], i) => `${i + 1}. ${h}: ${t}`).join("\n")}\n\nStain still there? Text a photo to 214-562-3449. ${SITE_ORIGIN}`,
+    idempotencyKey: `stain-guide-${email.toLowerCase()}`,
+    log: { type: "stain_guide", customerId, leadId },
+  });
+}
+
+/** Leads without a phone (guide downloads) can't go through submit_lead; save them directly. */
+async function saveEmailOnlyLead(name: string, email: string, page: string, source: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("leads")
+      .insert({
+        type: "contact",
+        name: name.slice(0, 120),
+        email: email.slice(0, 200),
+        page: page.slice(0, 200),
+        source: source.slice(0, 300),
+        details: { from: "stain_guide" },
+      })
+      .select("id")
+      .single();
+    return (data as { id: string } | null)?.id;
+  } catch (e) {
+    console.error("Could not save guide lead", e);
+    return undefined;
+  }
+}

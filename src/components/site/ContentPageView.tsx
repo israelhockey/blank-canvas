@@ -13,6 +13,7 @@ import {
 } from "@/lib/site-data";
 import { Commercial } from "./Commercial";
 import { Pricing } from "./Pricing";
+import { ExitIntent } from "./ExitIntent";
 import { QuickLead, openQuickLead } from "./QuickLead";
 import { FinalCta, Footer, Header, MobileBar, WhatsAppFab } from "./Sections";
 
@@ -170,6 +171,7 @@ export function ContentPageView({ page }: { page: ContentPage }) {
         cta={page.commercial ? { href: "#commercial", label: "Free walkthrough" } : undefined}
       />
       <QuickLead q={q} />
+      <ExitIntent total={totals(q).total} />
       <WhatsAppFab onOpen={() => openQuickLead("whatsapp")} />
     </div>
   );

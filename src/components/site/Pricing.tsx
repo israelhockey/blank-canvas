@@ -67,6 +67,11 @@ export function Pricing({ q, setQ, preset, setPreset, onVisible }: Props) {
     setQ({ ...q, [id]: Math.max(0, Math.min(20, (q[id] ?? 0) + d)) });
     setPreset(null);
     track("price_change", `${d > 0 ? "+" : "-"} ${id}`);
+    try {
+      sessionStorage.setItem("ss_priced", "1");
+    } catch {
+      /* ignore */
+    }
   };
 
   return (

@@ -1,4 +1,5 @@
 import { pagePath, type ContentPage } from "@/lib/seo-pages";
+import { ExitIntent } from "./ExitIntent";
 import { QuickLead, openQuickLead } from "./QuickLead";
 import { FinalCta, Footer, Header, MobileBar, WhatsAppFab } from "./Sections";
 
@@ -48,6 +49,7 @@ export function HubPage({
       <Footer />
       <MobileBar total={0} inPricing={false} cta={{ href: "/#pricing", label: "Get my price" }} />
       <QuickLead q={{}} />
+      <ExitIntent total={0} />
       <WhatsAppFab onOpen={() => openQuickLead("whatsapp")} />
     </div>
   );

@@ -11,6 +11,7 @@ import {
 } from "@/lib/site-data";
 import { Commercial } from "./Commercial";
 import { Pricing } from "./Pricing";
+import { ExitIntent } from "./ExitIntent";
 import { QuickLead, openQuickLead } from "./QuickLead";
 import {
   AreasFaq,
@@ -75,6 +76,7 @@ export function SitePage({ city }: { city?: City }) {
       <Footer />
       <MobileBar total={totals(q).total} inPricing={inPricing} />
       <QuickLead q={q} />
+      <ExitIntent total={totals(q).total} />
       <WhatsAppFab onOpen={() => openQuickLead("whatsapp")} />
     </div>
   );

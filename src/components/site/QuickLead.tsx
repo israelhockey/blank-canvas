@@ -22,12 +22,17 @@ import { TickIcon } from "./bits";
  * Open it from anywhere with openQuickLead("quick" | "price").
  */
 
-export type LeadMode = "quick" | "price" | "whatsapp";
+export type LeadMode = "quick" | "price" | "whatsapp" | "guide";
 const EVENT = "ss:quick-lead";
+type OpenDetail = { mode: LeadMode; exit?: boolean };
 
-export function openQuickLead(mode: LeadMode) {
-  window.dispatchEvent(new CustomEvent(EVENT, { detail: mode }));
+/** `exit: true` = opened by the leave-the-site pop-up (different headline). */
+export function openQuickLead(mode: LeadMode, opts: { exit?: boolean } = {}) {
+  window.dispatchEvent(new CustomEvent<OpenDetail>(EVENT, { detail: { mode, ...opts } }));
 }
+
+/** Remembered so the leave-the-site pop-up never shows to someone who already sent their info. */
+export const LEAD_SENT_KEY = "ss_lead_sent";
 
 const WANTS = ["Carpet", "Sofa / chairs", "Rugs", "Tile & grout", "Commercial space"];
 
@@ -37,17 +42,25 @@ export function QuickLead({ q }: { q: Quantities }) {
   const [mode, setMode] = useState<LeadMode>("quick");
   const [wants, setWants] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "failed">("idle");
-  const [err, setErr] = useState<{ name?: string | undefined; phone?: string | undefined }>({});
+  const [err, setErr] = useState<{
+    name?: string | undefined;
+    phone?: string | undefined;
+    email?: string | undefined;
+  }>({});
   const [done, setDone] = useState({ first: "", phone: "", emailed: false, wa: "" });
+  const [exit, setExit] = useState(false);
   const isWa = mode === "whatsapp";
+  const isGuide = mode === "guide";
 
   useEffect(() => {
     const open = (e: Event) => {
-      setMode((e as CustomEvent<LeadMode>).detail);
+      const d = (e as CustomEvent<OpenDetail>).detail;
+      setMode(d.mode);
+      setExit(!!d.exit);
       setStatus("idle");
       setErr({});
-      ref.current?.showModal();
-      track("quick_lead_open", (e as CustomEvent<LeadMode>).detail);
+      if (!ref.current?.open) ref.current?.showModal();
+      track(d.exit ? "exit_popup_open" : "quick_lead_open", d.mode);
     };
     window.addEventListener(EVENT, open);
     return () => window.removeEventListener(EVENT, open);
@@ -69,17 +82,29 @@ export function QuickLead({ q }: { q: Quantities }) {
     const next: typeof err = {};
     if (name.length < 2) next.name = "Your first name is enough.";
     const digits = phone.replace(/\D/g, "").length;
-    if (digits < 10)
+    if (isGuide) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        next.email = "Enter your email so we can send it.";
+      if (digits && digits < 10) next.phone = `That's ${digits} digits. Please enter all 10.`;
+    } else if (digits < 10)
       next.phone = digits
         ? `That's ${digits} digits. Please enter all 10, like 817-555-0123.`
         : "Enter your mobile number, like 817-555-0123.";
     setErr(next);
-    if (next.name || next.phone) return;
+    if (next.name || next.phone || next.email) return;
 
     setStatus("sending");
     const qParam = priced ? encodeQuantities(q) : "";
     const details = {
-      from: mode === "price" ? "price_builder" : mode === "whatsapp" ? "whatsapp" : "quick_form",
+      from:
+        mode === "price"
+          ? "price_builder"
+          : mode === "whatsapp"
+            ? "whatsapp"
+            : mode === "guide"
+              ? "stain_guide"
+              : "quick_form",
+      ...(exit ? { exit_popup: true } : {}),
       wants,
       ...(address ? { address } : {}),
       ...(notes ? { notes } : {}),
@@ -92,7 +117,7 @@ export function QuickLead({ q }: { q: Quantities }) {
           ? await c
               .rpc("submit_lead", {
                 p: {
-                  type: "quote",
+                  type: isGuide ? "contact" : "quote",
                   name,
                   phone,
                   email,
@@ -131,7 +156,16 @@ export function QuickLead({ q }: { q: Quantities }) {
         .then((r) => r.ok)
         .catch(() => false);
       if (!leadId && !mailed) throw new Error("not sent");
-      track("quick_lead_submit", mode, priced ? { total: t.total } : {});
+      track(
+        "quick_lead_submit",
+        exit ? `${mode} (exit pop-up)` : mode,
+        priced ? { total: t.total } : {},
+      );
+      try {
+        localStorage.setItem(LEAD_SENT_KEY, "1");
+      } catch {
+        /* private mode */
+      }
       const d = phone.replace(/\D/g, "").slice(-10);
       const wa = isWa
         ? whatsappHref(
@@ -181,7 +215,12 @@ export function QuickLead({ q }: { q: Quantities }) {
               <TickIcon />
             </div>
             <h3 id="ql-title">Got it, {done.first}!</h3>
-            {done.wa ? (
+            {isGuide ? (
+              <p>
+                The Holiday Stain Guide is on its way to your inbox. Check spam if you don&apos;t
+                see it in a few minutes.
+              </p>
+            ) : done.wa ? (
               <>
                 <p>WhatsApp is opening with your message ready. Just tap send.</p>
                 <a className="btn btn-primary wa-btn" href={done.wa}>
@@ -205,24 +244,40 @@ export function QuickLead({ q }: { q: Quantities }) {
         ) : (
           <form onSubmit={submit} noValidate>
             <p className="eyebrow">
-              {mode === "price" ? "Save your price" : isWa ? "Message us" : "Takes 20 seconds"}
+              {exit
+                ? "Before you go"
+                : mode === "price"
+                  ? "Save your price"
+                  : isWa
+                    ? "Message us"
+                    : isGuide
+                      ? "Free guide"
+                      : "Takes 20 seconds"}
             </p>
             <h3 id="ql-title">
               {mode === "price"
-                ? "Send me this price"
+                ? exit
+                  ? "Save your price?"
+                  : "Send me this price"
                 : isWa
                   ? "Get a quote on WhatsApp"
-                  : "Get a quick quote"}
+                  : isGuide
+                    ? "Get the free Holiday Stain Guide"
+                    : exit
+                      ? "Want your price texted to you?"
+                      : "Get a quick quote"}
             </h3>
             <p className="ql-sub">
-              {priced
-                ? `${items.map((i) => i.label).join(", ")} · ${money(t.total, 2)} with tax. We'll send it to you and text to set a time.`
-                : isWa
-                  ? "Fill this in and WhatsApp opens with your message ready to send. We reply with your price."
-                  : "Tell us who you are and we'll text you a price in minutes. No deposit, pay after the job."}
+              {isGuide
+                ? "10 quick fixes for wine, gravy, coffee, wax and pet accidents. We'll email it to you right now."
+                : priced
+                  ? `${items.map((i) => i.label).join(", ")} · ${money(t.total, 2)} with tax. We'll send it to you and text to set a time.`
+                  : isWa
+                    ? "Fill this in and WhatsApp opens with your message ready to send. We reply with your price."
+                    : "Tell us who you are and we'll text you a price in minutes. No deposit, pay after the job."}
             </p>
 
-            {mode !== "price" && (
+            {mode !== "price" && !isGuide && (
               <div className="ql-wants" role="group" aria-label="What needs cleaning?">
                 {WANTS.map((w) => (
                   <button
@@ -255,7 +310,13 @@ export function QuickLead({ q }: { q: Quantities }) {
               <span className="err">{err.name}</span>
             </label>
             <label className="f">
-              Mobile number
+              {isGuide ? (
+                <span>
+                  Mobile number <em>(optional)</em>
+                </span>
+              ) : (
+                "Mobile number"
+              )}
               <input
                 className="i"
                 name="phone"
@@ -274,9 +335,20 @@ export function QuickLead({ q }: { q: Quantities }) {
             </label>
             <label className="f">
               <span>
-                Email <em>({mode === "price" ? "we'll send your price here" : "optional"})</em>
+                Email{" "}
+                {!isGuide && (
+                  <em>({mode === "price" ? "we'll send your price here" : "optional"})</em>
+                )}
               </span>
-              <input className="i" name="email" type="email" autoComplete="email" />
+              <input
+                className="i"
+                name="email"
+                type="email"
+                autoComplete="email"
+                aria-invalid={!!err.email}
+                onInput={() => err.email && setErr({ ...err, email: undefined })}
+              />
+              <span className="err">{err.email}</span>
             </label>
             {isWa && (
               <>
@@ -305,7 +377,9 @@ export function QuickLead({ q }: { q: Quantities }) {
                   ? "Send me this price"
                   : isWa
                     ? "Continue to WhatsApp"
-                    : "Text me a price"}
+                    : isGuide
+                      ? "Email me the guide"
+                      : "Text me a price"}
             </button>
             {status === "failed" && (
               <p className="form-error">
@@ -313,7 +387,9 @@ export function QuickLead({ q }: { q: Quantities }) {
               </p>
             )}
             <p className="ql-small">
-              By sending, you agree Simple Surface may call or text you about this request.{" "}
+              {isGuide
+                ? "We'll email you the guide. No spam."
+                : "By sending, you agree Simple Surface may call or text you about this request."}{" "}
               <a href="/privacy">Privacy</a>
             </p>
           </form>

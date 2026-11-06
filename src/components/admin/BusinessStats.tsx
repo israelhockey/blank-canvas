@@ -98,6 +98,7 @@ const LEAD_KIND: Record<string, string> = {
   price_builder: "Saved their price",
   quick_form: "Quick quote",
   whatsapp: "WhatsApp button",
+  stain_guide: "Stain guide download",
   walkthrough: "Commercial walkthrough",
   quote: "Quote request",
   contact: "Contact form",
@@ -105,7 +106,8 @@ const LEAD_KIND: Record<string, string> = {
 function leadKind(l: LeadRow) {
   if (l.details?.["partial"]) return "partial";
   const from = l.details?.["from"];
-  if (from === "price_builder" || from === "quick_form" || from === "whatsapp") return from;
+  if (["price_builder", "quick_form", "whatsapp", "stain_guide"].includes(String(from)))
+    return String(from);
   return l.type;
 }
 

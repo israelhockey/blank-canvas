@@ -35,6 +35,7 @@ export const EMAIL_TYPE: Record<string, string> = {
   quote_nudge: "Quote follow-up",
   price_sent: "Their saved price",
   quick_quote: "Quick quote reply",
+  stain_guide: "Stain guide",
 };
 
 /** One email in a customer's email chain: subject, status, and the full text on tap. */

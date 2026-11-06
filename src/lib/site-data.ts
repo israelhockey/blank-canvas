@@ -22,6 +22,16 @@ export function publicOrigin(): string {
   return h === "localhost" || h === "127.0.0.1" ? window.location.origin : SITE_ORIGIN;
 }
 
+/**
+ * Leave-the-site pop-up. offer "quote" = "Want your price texted to you?";
+ * "guide" = free Holiday Stain Guide by email. People who used the price builder always get
+ * "Save your price?". Set enabled: false to turn it off.
+ */
+export const EXIT_POPUP: { enabled: boolean; offer: "quote" | "guide" } = {
+  enabled: true,
+  offer: "quote",
+};
+
 export const TAX = 0.0825;
 export const COMMERCIAL_RATE = 0.25; // dollars per sq ft
 

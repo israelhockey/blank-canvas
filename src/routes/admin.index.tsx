@@ -454,6 +454,7 @@ function leadTitle(l: Lead) {
   if (d["from"] === "price_builder") return "Saved their price: call to book";
   if (d["from"] === "quick_form") return "Quick quote: text them a price";
   if (d["from"] === "whatsapp") return "WhatsApp lead: reply on WhatsApp";
+  if (d["from"] === "stain_guide") return "Got the stain guide: warm lead, follow up";
   return LEAD_LABEL[l.type] ?? l.type;
 }
 
