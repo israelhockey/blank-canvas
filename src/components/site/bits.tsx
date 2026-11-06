@@ -86,7 +86,7 @@ export function AutoVideo({ src, eager, className, ...rest }: AutoVideoProps) {
     const unlock = () => {
       if (visible && v.paused) play();
     };
-    const evs = ["touchstart", "click", "scroll"] as const;
+    const evs = ["touchstart", "touchend", "pointerup", "click", "scroll"] as const;
     evs.forEach((ev) => window.addEventListener(ev, unlock, { passive: true }));
     return () => {
       io.disconnect();
