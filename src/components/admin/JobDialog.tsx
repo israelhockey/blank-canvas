@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -235,9 +235,18 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
     });
 
   /** Removes the job for good (for tests, duplicates and mistakes). Payment records stay. */
-  const remove = () =>
+  const remove = (withCustomer: boolean) =>
     run("delete", async () => {
       const c = dbOrThrow();
+      if (withCustomer) {
+        // A test booking: remove the person and everything about them (jobs, quotes, emails).
+        await c.from("leads").delete().eq("customer_id", job.customer_id);
+        const { error } = await c.from("customers").delete().eq("id", job.customer_id);
+        if (error) throw new Error(error.message);
+        toast.success(`Deleted ${cust?.name ?? "the customer"} and their bookings`);
+        onClose();
+        return;
+      }
       if (job.photos.length) await c.storage.from("job-photos").remove(job.photos);
       const { error } = await c.from("jobs").delete().eq("id", job.id);
       if (error) throw new Error(error.message);
@@ -494,6 +503,14 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
           Job #{job.number}
           {cust && <span className="font-normal text-muted-foreground">· {cust.name}</span>}
         </DialogTitle>
+        <div className="pt-1">
+          <DeleteJob
+            number={job.number}
+            customerName={cust?.name ?? ""}
+            disabled={b}
+            onDelete={remove}
+          />
+        </div>
       </DialogHeader>
 
       {/* progress */}
@@ -561,7 +578,7 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
       {/* details */}
       <details className="rounded-lg border p-3" open={step === "requested" && !job.address}>
         <summary className="cursor-pointer text-sm font-semibold">
-          Details: change date, address, notes, price · cancel or delete
+          Details: change date, address, notes, price · cancel
         </summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <Field label="Date">
@@ -628,32 +645,6 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
               Cancel job
             </Button>
           )}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="sm" variant="ghost" className="ml-auto text-red-600" disabled={b}>
-                Delete job
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete job #{job.number}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This removes it from the calendar and the customer&apos;s jobs for good, and opens
-                  the time slot. Use this for test bookings, duplicates and mistakes. If the
-                  customer just changed their mind, use Cancel job instead so you keep a record.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Keep it</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-red-600 text-white hover:bg-red-700"
-                  onClick={remove}
-                >
-                  Delete job
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </details>
 
@@ -738,5 +729,60 @@ function NextStep({
       {hint && <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>}
       <div className="mt-3 flex flex-wrap gap-2">{children}</div>
     </div>
+  );
+}
+
+function DeleteJob({
+  number,
+  customerName,
+  disabled,
+  onDelete,
+}: {
+  number: number;
+  customerName: string;
+  disabled: boolean;
+  onDelete: (withCustomer: boolean) => void;
+}) {
+  const [all, setAll] = useState(false);
+  return (
+    <AlertDialog onOpenChange={(o) => !o && setAll(false)}>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="outline" className="text-red-600" disabled={disabled}>
+          <Trash2 className="mr-1 size-4" /> Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete job #{number}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            It comes off the calendar for good and the time slot opens up. If a real customer just
+            changed their mind, use Cancel job instead so you keep a record.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {customerName && (
+          <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={all}
+              onChange={(e) => setAll(e.target.checked)}
+            />
+            <span>
+              <b>This was a test booking.</b> Also delete {customerName} and everything about them
+              (all their jobs, quotes, emails and leads).
+            </span>
+          </label>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep it</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-600 text-white hover:bg-red-700"
+            onClick={() => onDelete(all)}
+          >
+            {all ? "Delete everything" : "Delete job"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
