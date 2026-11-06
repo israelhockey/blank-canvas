@@ -15,6 +15,7 @@ import { QuickLead, openQuickLead } from "./QuickLead";
 import {
   AreasFaq,
   CityIntro,
+  CityLocal,
   FinalCta,
   Footer,
   Gallery,
@@ -26,6 +27,7 @@ import {
   Notice,
   PromiseStrip,
   Services,
+  WhatsAppFab,
   Why,
 } from "./Sections";
 
@@ -66,33 +68,14 @@ export function SitePage({ city }: { city?: City }) {
         <Guarantee />
         <Commercial />
         <Gallery />
+        {city && <CityLocal city={city} />}
         <AreasFaq city={city} />
         <FinalCta />
       </main>
       <Footer />
       <MobileBar total={totals(q).total} inPricing={inPricing} />
       <QuickLead q={q} />
-      <button
-        type="button"
-        className="wa-fab"
-        onClick={() => openQuickLead("whatsapp")}
-        aria-label="Get a quote on WhatsApp"
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 20.5l1.8-5.2A8.4 8.4 0 1 1 21 11.5z" />
-        </svg>
-        <span>WhatsApp</span>
-      </button>
+      <WhatsAppFab onOpen={() => openQuickLead("whatsapp")} />
     </div>
   );
 }

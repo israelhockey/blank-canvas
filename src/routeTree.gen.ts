@@ -23,7 +23,11 @@ import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as CalendarFeedTokenRouteImport } from './routes/calendar-feed.$token'
 import { Route as CarpetCleaningCityRouteImport } from './routes/carpet-cleaning.$city'
 import { Route as GoSlugRouteImport } from './routes/go.$slug'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as QuoteTokenRouteImport } from './routes/quote.$token'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AdminQuotesIndexRouteImport } from './routes/admin.quotes.index'
@@ -101,9 +105,29 @@ const GoSlugRoute = GoSlugRouteImport.update({
   path: '/go/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuoteTokenRoute = QuoteTokenRouteImport.update({
   id: '/quote/$token',
   path: '/quote/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesSlugRoute = ServicesSlugRouteImport.update({
+  id: '/services/$slug',
+  path: '/services/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCustomersIndexRoute = AdminCustomersIndexRouteImport.update({
@@ -152,8 +176,12 @@ export interface FileRoutesByFullPath {
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/go/$slug': typeof GoSlugRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/quote/$token': typeof QuoteTokenRoute
+  '/services/$slug': typeof ServicesSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/guides/': typeof GuidesIndexRoute
+  '/services/': typeof ServicesIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
   '/api/public/automations': typeof ApiPublicAutomationsRoute
@@ -174,8 +202,12 @@ export interface FileRoutesByTo {
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/go/$slug': typeof GoSlugRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/quote/$token': typeof QuoteTokenRoute
+  '/services/$slug': typeof ServicesSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/guides': typeof GuidesIndexRoute
+  '/services': typeof ServicesIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
   '/api/public/automations': typeof ApiPublicAutomationsRoute
@@ -198,8 +230,12 @@ export interface FileRoutesById {
   '/calendar-feed/$token': typeof CalendarFeedTokenRoute
   '/carpet-cleaning/$city': typeof CarpetCleaningCityRoute
   '/go/$slug': typeof GoSlugRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/quote/$token': typeof QuoteTokenRoute
+  '/services/$slug': typeof ServicesSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/guides/': typeof GuidesIndexRoute
+  '/services/': typeof ServicesIndexRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
   '/api/public/automations': typeof ApiPublicAutomationsRoute
@@ -223,8 +259,12 @@ export interface FileRouteTypes {
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/go/$slug'
+    | '/guides/$slug'
     | '/quote/$token'
+    | '/services/$slug'
     | '/admin/'
+    | '/guides/'
+    | '/services/'
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
     | '/api/public/automations'
@@ -245,8 +285,12 @@ export interface FileRouteTypes {
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/go/$slug'
+    | '/guides/$slug'
     | '/quote/$token'
+    | '/services/$slug'
     | '/admin'
+    | '/guides'
+    | '/services'
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
     | '/api/public/automations'
@@ -268,8 +312,12 @@ export interface FileRouteTypes {
     | '/calendar-feed/$token'
     | '/carpet-cleaning/$city'
     | '/go/$slug'
+    | '/guides/$slug'
     | '/quote/$token'
+    | '/services/$slug'
     | '/admin/'
+    | '/guides/'
+    | '/services/'
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
     | '/api/public/automations'
@@ -287,7 +335,11 @@ export interface RootRouteChildren {
   CalendarFeedTokenRoute: typeof CalendarFeedTokenRoute
   CarpetCleaningCityRoute: typeof CarpetCleaningCityRoute
   GoSlugRoute: typeof GoSlugRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   QuoteTokenRoute: typeof QuoteTokenRoute
+  ServicesSlugRoute: typeof ServicesSlugRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
+  ServicesIndexRoute: typeof ServicesIndexRoute
   ApiPublicAutomationsRoute: typeof ApiPublicAutomationsRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -392,11 +444,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quote/$token': {
       id: '/quote/$token'
       path: '/quote/$token'
       fullPath: '/quote/$token'
       preLoaderRoute: typeof QuoteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/': {
+      id: '/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/$slug': {
+      id: '/services/$slug'
+      path: '/services/$slug'
+      fullPath: '/services/$slug'
+      preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/customers/': {
@@ -481,7 +561,11 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarFeedTokenRoute: CalendarFeedTokenRoute,
   CarpetCleaningCityRoute: CarpetCleaningCityRoute,
   GoSlugRoute: GoSlugRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   QuoteTokenRoute: QuoteTokenRoute,
+  ServicesSlugRoute: ServicesSlugRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
+  ServicesIndexRoute: ServicesIndexRoute,
   ApiPublicAutomationsRoute: ApiPublicAutomationsRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }

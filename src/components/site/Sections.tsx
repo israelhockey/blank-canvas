@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import { BUSINESS, CITIES, cityParam, money, textUsHref, type City } from "@/lib/site-data";
+import { CITY_LOCAL } from "@/lib/city-local";
+import { GUIDES, SERVICE_PAGES } from "@/lib/seo-pages";
 import { ArrowIcon, AutoVideo, BeforeAfter, ClockIcon, LeafIcon, PlugIcon } from "./bits";
 import { openQuickLead } from "./QuickLead";
 
@@ -49,7 +51,10 @@ const DRAWER: [string, string, string][] = [
   ["#faq", "FAQ", "Dry time, payment, pets"],
 ];
 
-export function Header() {
+/** On pages that don't have every section, anchors not on the page point to the home page. */
+const fixAnchor = (h: string, local?: string[]) => (!local || local.includes(h) ? h : `/${h}`);
+
+export function Header({ local }: { local?: string[] } = {}) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -69,7 +74,7 @@ export function Header() {
         </Link>
         <nav className="links" aria-label="Main">
           {NAV.map(([h, l]) => (
-            <a key={h} href={h}>
+            <a key={h} href={fixAnchor(h, local)}>
               {l}
             </a>
           ))}
@@ -77,7 +82,7 @@ export function Header() {
         <a className="head-phone" href={BUSINESS.phoneHref}>
           {BUSINESS.phoneDisplay}
         </a>
-        <a className="btn btn-primary" href="#book">
+        <a className="btn btn-primary" href={fixAnchor("#book", local)}>
           Book now
         </a>
         <button
@@ -102,7 +107,7 @@ export function Header() {
       >
         <div className="wrap">
           {DRAWER.map(([h, b, s]) => (
-            <a key={h} href={h}>
+            <a key={h} href={fixAnchor(h, local)}>
               <b>{b}</b>
               <span>{s}</span>
             </a>
@@ -257,6 +262,54 @@ export function CityIntro({ city }: { city: City }) {
             ← Fort Worth carpet cleaning
           </Link>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/** City pages: local details plus links to each service and guide (helps Google and visitors). */
+export function CityLocal({ city }: { city: City }) {
+  const local = CITY_LOCAL[city.slug];
+  return (
+    <section className="cp-body" id="city-services">
+      <div className="wrap cp-article">
+        <h2>{city.name} carpet cleaning services</h2>
+        <p>
+          Simple Surface Carpet Cleaning cleans homes, apartments, rentals and businesses all over{" "}
+          {city.name}
+          {local ? `, ${local.near}` : ""}. We bring portable, low-moisture equipment that plugs
+          into a regular wall outlet, so there's no truck in your driveway and no hose through your
+          front door. Carpet is usually dry in a few hours.
+        </p>
+        <p>
+          Prices are flat and the same as Fort Worth: $50 per room, $100 for a master suite, $100
+          for any sofa or sectional, $50 for chairs and loveseats, and rugs from $50. Commercial
+          carpet and gym floors in {city.name} start at $0.25 per square foot. There&apos;s no
+          deposit, and you pay after the job.
+        </p>
+        <ul className="cp-cities">
+          {SERVICE_PAGES.map((sp) => (
+            <li key={sp.slug}>
+              <a href={`/services/${sp.slug}`}>
+                {sp.serviceType} in {city.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+        {local && (
+          <p>
+            ZIP codes we serve in and around {city.name}: {local.zips.join(", ")}. Not sure if
+            you&apos;re in our area? Call or text {BUSINESS.phoneDisplay}.
+          </p>
+        )}
+        <h2 style={{ marginTop: 40 }}>Helpful guides</h2>
+        <ul className="cp-cities">
+          {GUIDES.map((g) => (
+            <li key={g.slug}>
+              <a href={`/guides/${g.slug}`}>{g.h1}</a>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -678,6 +731,14 @@ export function faqFor(city?: City): [string, string][] {
       `Do you offer carpet cleaning in ${city.name}, TX?`,
       `Yes. Simple Surface Carpet Cleaning cleans carpet, upholstery, rugs and tile for homes and businesses in ${city.name} and across ${city.county}. Book online in about a minute or call ${BUSINESS.phoneDisplay}.`,
     ],
+    ...(CITY_LOCAL[city.slug]
+      ? ([
+          [
+            `Which ${city.name} ZIP codes do you serve?`,
+            `We clean throughout ${city.name}, including ZIP codes ${CITY_LOCAL[city.slug]!.zips.join(", ")}, and the rest of ${city.county}.`,
+          ],
+        ] as [string, string][])
+      : []),
     [
       `How much does carpet cleaning cost in ${city.name}?`,
       `${city.name} gets the same flat prices as everywhere we work: $50 per room, $100 for a master suite, and flat prices for sofas, chairs and rugs. No deposit, and you pay after the job. Texas sales tax of 8.25% is added.`,
@@ -776,19 +837,25 @@ export function Footer() {
           <h4>Services</h4>
           <ul>
             <li>
-              <a href="#services">Carpet</a>
+              <a href="/guides/carpet-cleaning-cost-fort-worth">Carpet cleaning prices</a>
             </li>
             <li>
-              <a href="#services">Upholstery</a>
+              <a href="/services/upholstery-cleaning">Upholstery &amp; couches</a>
             </li>
             <li>
-              <a href="#services">Rugs</a>
+              <a href="/services/rug-cleaning">Area rugs</a>
             </li>
             <li>
-              <a href="#services">Tile &amp; grout</a>
+              <a href="/services/tile-grout-cleaning">Tile &amp; grout</a>
             </li>
             <li>
-              <a href="#commercial">Commercial</a>
+              <a href="/services/commercial-carpet-cleaning">Commercial</a>
+            </li>
+            <li>
+              <a href="/services/pet-stain-odor-removal">Pet stains &amp; odor</a>
+            </li>
+            <li>
+              <a href="/services/move-out-carpet-cleaning">Move-out cleaning</a>
             </li>
           </ul>
         </div>
@@ -801,7 +868,7 @@ export function Footer() {
               </li>
             ))}
             <li>
-              <a href="#areas">All areas</a>
+              <a href="/#areas">All areas</a>
             </li>
           </ul>
         </div>
@@ -818,14 +885,18 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <h4>Follow</h4>
+          <h4>Guides</h4>
           <ul>
+            {GUIDES.map((g) => (
+              <li key={g.slug}>
+                <a href={`/guides/${g.slug}`}>{g.h1.replace(/\?$/, "")}</a>
+              </li>
+            ))}
             <li>
               <a href={BUSINESS.instagram} target="_blank" rel="noopener noreferrer">
                 Instagram
-              </a>
-            </li>
-            <li>
+              </a>{" "}
+              ·{" "}
               <a href={BUSINESS.facebook} target="_blank" rel="noopener noreferrer">
                 Facebook
               </a>
@@ -844,7 +915,15 @@ export function Footer() {
   );
 }
 
-export function MobileBar({ total, inPricing }: { total: number; inPricing: boolean }) {
+export function MobileBar({
+  total,
+  inPricing,
+  cta,
+}: {
+  total: number;
+  inPricing: boolean;
+  cta?: { href: string; label: string } | undefined;
+}) {
   const booking = inPricing && total > 0;
   return (
     <div className="mbar">
@@ -854,9 +933,36 @@ export function MobileBar({ total, inPricing }: { total: number; inPricing: bool
       <a className="btn btn-ghost" href={textUsHref()}>
         Text
       </a>
-      <a className="btn btn-primary" href={booking ? "#book" : "#pricing"}>
-        {booking ? `Book · ${money(total)}` : "Get my price"}
-      </a>
+      {cta ? (
+        <a className="btn btn-primary" href={cta.href}>
+          {cta.label}
+        </a>
+      ) : (
+        <a className="btn btn-primary" href={booking ? "#book" : "#pricing"}>
+          {booking ? `Book · ${money(total)}` : "Get my price"}
+        </a>
+      )}
     </div>
+  );
+}
+
+export function WhatsAppFab({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button type="button" className="wa-fab" onClick={onOpen} aria-label="Get a quote on WhatsApp">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 20.5l1.8-5.2A8.4 8.4 0 1 1 21 11.5z" />
+      </svg>
+      <span>WhatsApp</span>
+    </button>
   );
 }

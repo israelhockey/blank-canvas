@@ -1,4 +1,5 @@
 import { BUSINESS, CITIES, SITE_ORIGIN, cityParam, type City } from "./site-data";
+import { pagePath, type ContentPage } from "./seo-pages";
 import { faqFor } from "@/components/site/Sections";
 import siteCss from "@/site.css?url";
 
@@ -98,4 +99,88 @@ export function businessJsonLd(city?: City) {
       }),
     });
   return out;
+}
+
+/** Structured data for a service page or guide: Service/Article + FAQ + breadcrumbs. */
+export function contentJsonLd(page: ContentPage) {
+  const url = abs(pagePath(page));
+  const main =
+    page.kind === "service"
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: page.h1,
+          serviceType: page.serviceType,
+          description: page.description,
+          url,
+          image: abs(page.image),
+          provider: { "@id": `${SITE_URL}/#business` },
+          areaServed: CITIES.map((c) => ({ "@type": "City", name: `${c.name}, TX` })),
+          ...(page.commercial
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  priceCurrency: "USD",
+                  priceSpecification: {
+                    "@type": "UnitPriceSpecification",
+                    price: 0.25,
+                    priceCurrency: "USD",
+                    unitText: "square foot",
+                  },
+                },
+              }
+            : page.lowPrice
+              ? {
+                  offers: {
+                    "@type": "AggregateOffer",
+                    priceCurrency: "USD",
+                    lowPrice: page.lowPrice,
+                    highPrice: 100,
+                  },
+                }
+              : {}),
+        }
+      : {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: page.h1,
+          description: page.description,
+          url,
+          image: abs(page.image),
+          datePublished: "2026-11-06",
+          dateModified: "2026-11-06",
+          author: { "@type": "Organization", name: BUSINESS.brandName, url: abs("/") },
+          publisher: {
+            "@type": "Organization",
+            name: BUSINESS.brandName,
+            logo: { "@type": "ImageObject", url: abs("/brand/logo-full.png") },
+          },
+          mainEntityOfPage: url,
+        };
+  const faq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: page.faqs.map(([q, a]) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
+  const crumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: abs("/") },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: page.serviceType ?? page.h1,
+        item: url,
+      },
+    ],
+  };
+  return [main, faq, crumbs].map((o) => ({
+    type: "application/ld+json",
+    children: JSON.stringify(o),
+  }));
 }

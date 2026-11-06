@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { ALL_PAGES, pagePath } from "@/lib/seo-pages";
 import { CITIES, SITE_ORIGIN, cityParam } from "@/lib/site-data";
 
 /** /sitemap.xml — always lists the live domain, matching the canonical links. */
@@ -11,6 +12,10 @@ export const Route = createFileRoute("/sitemap.xml")({
         const paths = [
           "/",
           ...CITIES.map((c) => `/carpet-cleaning/${cityParam(c)}`),
+          "/services",
+          ...ALL_PAGES.filter((p) => p.kind === "service").map(pagePath),
+          "/guides",
+          ...ALL_PAGES.filter((p) => p.kind === "guide").map(pagePath),
           "/privacy",
           "/terms",
         ];

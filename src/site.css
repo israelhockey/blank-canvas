@@ -463,3 +463,39 @@ dialog.ql::backdrop{background:rgba(6,15,30,.55);backdrop-filter:blur(2px)}
 @media (max-width:820px){.wa-fab{bottom:calc(82px + env(safe-area-inset-bottom,0px));right:14px;padding:12px 15px 12px 13px}}
 .wa-btn{background:#128c4a;border-color:#128c4a;margin-top:6px}
 .ql textarea.i{resize:vertical;min-height:64px;font:inherit}
+
+/* service pages & guides */
+.cp-hero{padding:clamp(28px,5vw,64px) 0 clamp(40px,6vw,72px);background:var(--surface);border-bottom:1px solid var(--line)}
+.cp-hero-in{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,4vw,56px);align-items:center}
+.cp-hero-in>*{min-width:0}
+.cp-hero h1{font-size:clamp(38px,5.4vw,68px);margin-top:12px;line-height:1}
+.cp-hero .lede{margin-top:18px}
+.cp-hero-img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:22px;box-shadow:0 30px 60px rgba(15,31,56,.18)}
+.crumbs{display:flex;flex-wrap:wrap;gap:8px;font-size:13.5px;color:var(--muted);margin-bottom:16px}
+.crumbs a{color:inherit}
+.cp-price{display:inline-block;margin-top:20px;background:var(--accent-soft);color:var(--ink);font-weight:700;padding:10px 16px;border-radius:999px}
+.cp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.cp-trust{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 0;padding:0;list-style:none;font-size:14.5px;color:var(--muted)}
+.cp-trust li::before{content:"✓ ";color:var(--accent);font-weight:800}
+.cp-body{padding:clamp(48px,7vw,88px) 0}
+.cp-article{max-width:820px}
+.cp-article section+section{margin-top:44px}
+.cp-article h2{font-size:clamp(26px,3.2vw,38px);line-height:1.1}
+.cp-article p{font-size:17px;line-height:1.7;color:var(--ink-2,var(--ink));margin:14px 0 0}
+.cp-article ul{margin:14px 0 0;padding-left:22px}
+.cp-article li{font-size:17px;line-height:1.65;margin:6px 0}
+.cp-cities{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 18px;padding-left:0!important;list-style:none}
+.cp-cities a{color:var(--accent);font-weight:600}
+.cp-faq{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.cp-faq details{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.cp-faq summary{cursor:pointer;font-weight:700;font-size:17px}
+.cp-faq p{margin-top:10px}
+.cp-related{padding:clamp(48px,7vw,88px) 0}
+.cp-related h2{font-size:clamp(26px,3.2vw,38px);margin-bottom:24px}
+.cp-related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.cp-card{display:flex;flex-direction:column;gap:8px;padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);text-decoration:none;transition:border-color .15s,transform .15s}
+.cp-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.cp-card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px}
+.cp-card b{font-size:19px;line-height:1.25}
+.cp-card span:last-child{color:var(--muted);font-size:14.5px;line-height:1.5}
+@media (max-width:820px){.cp-hero-in{grid-template-columns:1fr}.cp-hero-img{order:-1;aspect-ratio:16/9}}
