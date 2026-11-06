@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -20,6 +21,17 @@ import {
   telHref,
   usd,
 } from "@/components/admin/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -132,6 +144,7 @@ function CustomerPage() {
               </Link>
             </Button>
             <NewJob customerId={id} onCreated={setJob} />
+            <DeleteCustomer id={id} name={b.customer.name} jobs={b.jobs.length} />
           </>
         }
       />
@@ -698,5 +711,53 @@ function NewJob({ customerId, onCreated }: { customerId: string; onCreated: (j: 
     >
       New job
     </Button>
+  );
+}
+
+/** Removes a customer and everything about them (jobs, quotes, emails, leads). For tests and duplicates. */
+function DeleteCustomer({ id, name, jobs }: { id: string; name: string; jobs: number }) {
+  const navigate = useNavigate();
+  const refresh = useRefresh();
+  const [busy, setBusy] = useState(false);
+  const remove = async () => {
+    setBusy(true);
+    try {
+      const c = dbOrThrow();
+      await c.from("leads").delete().eq("customer_id", id);
+      const { error } = await c.from("customers").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+      toast.success(`Deleted ${name}`);
+      await refresh();
+      void navigate({ to: "/admin/customers" });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" className="text-red-600" disabled={busy}>
+          <Trash2 className="mr-1 size-4" /> Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {name}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This deletes the customer and everything about them for good
+            {jobs ? `, including ${jobs} job${jobs === 1 ? "" : "s"} on the calendar` : ""}, plus
+            their quotes, emails and notes. Use it for test bookings and duplicates.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep</AlertDialogCancel>
+          <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={remove}>
+            Delete customer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -70,49 +70,82 @@ function Customers() {
         placeholder="Search name, phone, email, tag…"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        className="mb-4 w-72"
+        className="mb-4 w-full sm:w-72"
       />
       <Panel className="p-0">
         {list.length ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-xs text-muted-foreground">
-                <tr className="border-b">
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Phone</th>
-                  <th className="p-3">Stage</th>
-                  <th className="p-3">Source</th>
-                  <th className="p-3">Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((c) => (
-                  <tr key={c.id} className="border-b last:border-0 hover:bg-muted/50">
-                    <td className="p-3">
-                      <Link
-                        to="/admin/customers/$id"
-                        params={{ id: c.id }}
-                        className="font-medium underline-offset-2 hover:underline"
-                      >
-                        {c.name}
-                      </Link>
-                      {c.company && (
-                        <div className="text-xs text-muted-foreground">{c.company}</div>
-                      )}
-                    </td>
-                    <td className="p-3 whitespace-nowrap">{c.phone}</td>
-                    <td className="p-3">
+          <>
+            {/* phones: one tappable card per customer */}
+            <ul className="divide-y md:hidden">
+              {list.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    to="/admin/customers/$id"
+                    params={{ id: c.id }}
+                    className="flex items-center justify-between gap-3 p-3 active:bg-muted/60"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{c.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {[c.phone, c.source].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                    <span className="flex flex-none items-center gap-2">
                       <StatusPill value={c.stage} />
-                    </td>
-                    <td className="p-3 max-w-48 truncate text-muted-foreground">{c.source}</td>
-                    <td className="p-3 whitespace-nowrap text-muted-foreground">
-                      {ago(c.updated_at)}
-                    </td>
+                      <span className="text-muted-foreground" aria-hidden="true">
+                        ›
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="p-3">Name</th>
+                    <th className="p-3">Phone</th>
+                    <th className="p-3">Stage</th>
+                    <th className="p-3">Source</th>
+                    <th className="p-3">Updated</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {list.map((c) => (
+                    <tr
+                      key={c.id}
+                      className="cursor-pointer border-b last:border-0 hover:bg-muted/50"
+                      onClick={() =>
+                        void navigate({ to: "/admin/customers/$id", params: { id: c.id } })
+                      }
+                    >
+                      <td className="p-3">
+                        <Link
+                          to="/admin/customers/$id"
+                          params={{ id: c.id }}
+                          className="font-medium underline-offset-2 hover:underline"
+                        >
+                          {c.name}
+                        </Link>
+                        {c.company && (
+                          <div className="text-xs text-muted-foreground">{c.company}</div>
+                        )}
+                      </td>
+                      <td className="p-3 whitespace-nowrap">{c.phone}</td>
+                      <td className="p-3">
+                        <StatusPill value={c.stage} />
+                      </td>
+                      <td className="p-3 max-w-48 truncate text-muted-foreground">{c.source}</td>
+                      <td className="p-3 whitespace-nowrap text-muted-foreground">
+                        {ago(c.updated_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <div className="p-4">
             <Empty>
