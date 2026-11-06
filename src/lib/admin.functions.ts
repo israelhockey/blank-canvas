@@ -198,7 +198,7 @@ export const getSquareInvoice = createServerFn({ method: "POST" })
 
 const emailSchema = z.object({
   auth: z.string(),
-  kind: z.enum(["quote", "receipt", "review", "reminder", "repeat", "confirm", "custom"]),
+  kind: z.enum(["quote", "receipt", "review", "reminder", "repeat", "confirm", "moved", "custom"]),
   customerId: z.string().uuid().optional(),
   jobId: z.string().uuid().optional(),
   subject: z.string().max(200).optional().default(""),

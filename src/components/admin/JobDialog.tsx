@@ -5,6 +5,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -220,6 +231,22 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
         body: `Job #${job.number} canceled`,
       });
       toast.success("Job canceled. The time slot is open again.");
+      onClose();
+    });
+
+  /** Removes the job for good (for tests, duplicates and mistakes). Payment records stay. */
+  const remove = () =>
+    run("delete", async () => {
+      const c = dbOrThrow();
+      if (job.photos.length) await c.storage.from("job-photos").remove(job.photos);
+      const { error } = await c.from("jobs").delete().eq("id", job.id);
+      if (error) throw new Error(error.message);
+      await logActivity({
+        customer_id: job.customer_id,
+        kind: "status",
+        body: `Job #${job.number} deleted`,
+      });
+      toast.success(`Job #${job.number} deleted`);
       onClose();
     });
 
@@ -534,7 +561,7 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
       {/* details */}
       <details className="rounded-lg border p-3" open={step === "requested" && !job.address}>
         <summary className="cursor-pointer text-sm font-semibold">
-          Details: date, address, notes, price
+          Details: change date, address, notes, price · cancel or delete
         </summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <Field label="Date">
@@ -601,6 +628,32 @@ function JobBody({ job: initial, onClose }: { job: Job; onClose: () => void }) {
               Cancel job
             </Button>
           )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="ml-auto text-red-600" disabled={b}>
+                Delete job
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete job #{job.number}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes it from the calendar and the customer&apos;s jobs for good, and opens
+                  the time slot. Use this for test bookings, duplicates and mistakes. If the
+                  customer just changed their mind, use Cancel job instead so you keep a record.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep it</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 text-white hover:bg-red-700"
+                  onClick={remove}
+                >
+                  Delete job
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </details>
 

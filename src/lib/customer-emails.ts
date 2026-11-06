@@ -3,7 +3,15 @@ import { brandedLayout, esc, itemsTable, usd } from "./email";
 /* Branded customer emails, shared by the back office and the automatic emails. Server-only. */
 
 export type CustomerEmailKind =
-  "quote" | "quote_nudge" | "receipt" | "review" | "reminder" | "repeat" | "confirm" | "custom";
+  | "quote"
+  | "quote_nudge"
+  | "receipt"
+  | "review"
+  | "reminder"
+  | "repeat"
+  | "confirm"
+  | "moved"
+  | "custom";
 
 export type CustomerEmailData = {
   name: string;
@@ -136,6 +144,16 @@ export function buildCustomerEmail(kind: CustomerEmailKind, input: CustomerEmail
         body: table + notes,
       });
       text = `You're booked with Simple Surface: ${data.day}, ${data.window}. Questions: 214-562-3449.`;
+      break;
+    case "moved":
+      subject = `New time: ${data.day}, ${data.window}`;
+      html = brandedLayout({
+        origin: data.origin,
+        heading: `Your cleaning has a new time, ${first}`,
+        intro: `We've moved your appointment to ${data.day}, ${data.window} arrival. If that doesn't work, just reply or text 214-562-3449 and we'll find another time.`,
+        body: table + notes,
+      });
+      text = `Your Simple Surface cleaning is now ${data.day}, ${data.window} arrival. If that doesn't work, reply or text 214-562-3449.`;
       break;
   }
   return { subject, html, text };

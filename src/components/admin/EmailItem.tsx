@@ -25,6 +25,7 @@ export function parseEmail(body: string | null): EmailRecord | null {
 export const EMAIL_TYPE: Record<string, string> = {
   request_received: "Booking received",
   confirm: "Booking confirmed",
+  moved: "New time",
   reminder: "Reminder",
   quote: "Quote",
   quote_accepted: "Quote accepted",

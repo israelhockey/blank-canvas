@@ -947,8 +947,21 @@ export function MobileBar({
 }
 
 export function WhatsAppFab({ onOpen }: { onOpen: () => void }) {
+  // On phones, wait until they scroll past the headline so it never covers it.
+  const [wait, setWait] = useState(true);
+  useEffect(() => {
+    const on = () => setWait(window.scrollY < 560);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
   return (
-    <button type="button" className="wa-fab" onClick={onOpen} aria-label="Get a quote on WhatsApp">
+    <button
+      type="button"
+      className={wait ? "wa-fab wait" : "wa-fab"}
+      onClick={onOpen}
+      aria-label="Get a quote on WhatsApp"
+    >
       <svg
         width="22"
         height="22"

@@ -15,6 +15,7 @@ import {
   type Quantities,
 } from "@/lib/site-data";
 import { db } from "@/lib/db";
+import { windowHours } from "@/lib/ics";
 import { leadSource, track, visitorId } from "@/lib/track";
 import { InfoIcon, ShieldIcon, TickIcon } from "./bits";
 import { openQuickLead } from "./QuickLead";
@@ -46,6 +47,54 @@ function upcomingDays(): Date[] {
     if (d.getDay() !== 0) out.push(d);
   }
   return out;
+}
+
+const WINDOW_HINTS = ["Morning", "Late morning", "Early afternoon", "Afternoon"];
+
+function isTomorrow(d: Date) {
+  const t = new Date();
+  const n = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1);
+  return d.toDateString() === n.toDateString();
+}
+
+function AddToCalendar({ day, slot }: { day: Date; slot: string }) {
+  const [a, b] = windowHours(slot);
+  const ymd = iso(day).replace(/-/g, "");
+  const hh = (n: number) => `${String(n).padStart(2, "0")}0000`;
+  const title = "Carpet cleaning: Simple Surface (we'll text to confirm)";
+  const details = `Arrival window ${slot}. Questions? Call or text ${BUSINESS.phoneDisplay}.`;
+  const google =
+    "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+    `&text=${encodeURIComponent(title)}&dates=${ymd}T${hh(a)}/${ymd}T${hh(b)}` +
+    `&ctz=America/Chicago&details=${encodeURIComponent(details)}`;
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Simple Surface//Booking//EN",
+    "BEGIN:VEVENT",
+    `UID:${ymd}-${a}@simplesurfacecarpetcleaning.com`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
+    `DTSTART;TZID=America/Chicago:${ymd}T${hh(a)}`,
+    `DTEND;TZID=America/Chicago:${ymd}T${hh(b)}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${details}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  return (
+    <div className="bk-cal">
+      <a className="btn btn-ghost" href={google} target="_blank" rel="noreferrer">
+        Add to Google Calendar
+      </a>
+      <a
+        className="btn btn-ghost"
+        href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`}
+        download="simple-surface-cleaning.ics"
+      >
+        Apple / Outlook calendar
+      </a>
+    </div>
+  );
 }
 
 export function Pricing({ q, setQ, preset, setPreset, onVisible }: Props) {
@@ -224,6 +273,8 @@ function BookingForm({ q }: { q: Quantities }) {
   }>({});
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "failed">("idle");
   const [doneText, setDoneText] = useState("");
+  const [booked, setBooked] = useState<{ day: Date; slot: string } | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
@@ -280,6 +331,7 @@ function BookingForm({ q }: { q: Quantities }) {
           m[k] = (m[k] ?? 0) + Number(r.n);
         }
         setTaken(m);
+        setLoaded(true);
       });
   }, []);
 
@@ -292,6 +344,21 @@ function BookingForm({ q }: { q: Quantities }) {
     ? day.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
     : "";
   const pickLabel = day && slot ? `${dayLabel}, ${slot} arrival` : "";
+
+  // First open slot, offered as a one-tap pick.
+  const soonest = useMemo(() => {
+    if (!loaded) return null;
+    for (const d of days) {
+      if (dayFull(d)) continue;
+      const w = ARRIVAL_WINDOWS.find((x) => !slotFull(d, x));
+      if (w) return { d, w };
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, days, taken]);
+
+  const scrollDays = (dir: number) =>
+    daysRef.current?.scrollBy({ left: dir * 240, behavior: "smooth" });
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -386,7 +453,11 @@ function BookingForm({ q }: { q: Quantities }) {
       setDoneText(
         `Thanks, ${name.split(" ")[0]}. We got your request for ${what} (${money(t.total, 2)} with tax) on ${pickLabel}. We'll confirm by text${email ? " and email" : ""} shortly.`,
       );
+      setBooked({ day: day!, slot: slot! });
       setStatus("done");
+      requestAnimationFrame(() =>
+        document.getElementById("book")?.scrollIntoView({ block: "start", behavior: "smooth" }),
+      );
     } catch {
       setStatus("failed");
     }
@@ -400,8 +471,14 @@ function BookingForm({ q }: { q: Quantities }) {
             <TickIcon />
           </div>
           <div>
-            <h3>You're all set</h3>
+            <h3>Request sent!</h3>
             <p>{doneText}</p>
+            <ol className="bk-next">
+              <li>We text you to confirm the time, usually within the hour.</li>
+              <li>The day before, you get a reminder. We text when we're on the way.</li>
+              <li>You pay after the job, once you're happy with it.</li>
+            </ol>
+            {booked && <AddToCalendar day={booked.day} slot={booked.slot} />}
           </div>
         </div>
       </div>
@@ -426,6 +503,126 @@ function BookingForm({ q }: { q: Quantities }) {
       <div className="book-head">
         <h3>Book your cleaning</h3>
         <span className="eyebrow">No deposit · Pay after the job</span>
+      </div>
+      <div className="bk-step">
+        <div className="bk-step-h">
+          <span className="bk-n">1</span>
+          <b>When works for you?</b>
+          <span className="sp-hint">Mon–Sat · 2-hour arrival windows</span>
+        </div>
+        {soonest && !day && (
+          <button
+            type="button"
+            className="bk-soon"
+            onClick={() => {
+              setDay(soonest.d);
+              setSlot(soonest.w);
+              track("slot_soonest");
+            }}
+          >
+            <span aria-hidden="true">⚡</span> Soonest opening:{" "}
+            <b>
+              {soonest.d.toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+              , {soonest.w}
+            </b>
+          </button>
+        )}
+        <div className="days-wrap">
+          <button
+            type="button"
+            className="days-arrow"
+            aria-label="Earlier days"
+            onClick={() => scrollDays(-1)}
+          >
+            ‹
+          </button>
+          <div className="days" ref={daysRef} role="radiogroup" aria-label="Day">
+            {days.map((d, i) => {
+              const full = loaded && dayFull(d);
+              return (
+                <button
+                  key={d.toDateString()}
+                  type="button"
+                  role="radio"
+                  aria-checked={day?.toDateString() === d.toDateString()}
+                  disabled={full}
+                  aria-label={`${d.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}${full ? " (full)" : ""}`}
+                  onClick={() => {
+                    setDay(d);
+                    if (slot && slotFull(d, slot)) setSlot(null);
+                    setErrs(({ slot: _s, ...e }) => e);
+                  }}
+                >
+                  <small>
+                    {i === 0 && isTomorrow(d)
+                      ? "Tmrw"
+                      : d.toLocaleDateString("en-US", { weekday: "short" })}
+                  </small>
+                  <b>{d.getDate()}</b>
+                  <span>{full ? "Full" : d.toLocaleDateString("en-US", { month: "short" })}</span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            className="days-arrow"
+            aria-label="Later days"
+            onClick={() => scrollDays(1)}
+          >
+            ›
+          </button>
+        </div>
+        <div className="slots" role="radiogroup" aria-label="Arrival window">
+          {ARRIVAL_WINDOWS.map((w, i) => {
+            const full = slotFull(day, w);
+            return (
+              <button
+                key={w}
+                type="button"
+                role="radio"
+                aria-checked={slot === w}
+                disabled={full}
+                onClick={() => {
+                  setSlot(w);
+                  setErrs(({ slot: _s, ...e }) => e);
+                }}
+              >
+                <b>{w}</b>
+                <small>{full ? "Booked" : WINDOW_HINTS[i]}</small>
+              </button>
+            );
+          })}
+        </div>
+        <div className={pickLabel ? "bk-picked on" : "bk-picked"} aria-live="polite">
+          {pickLabel ? (
+            <>
+              <TickIcon />
+              <span>
+                <b>{dayLabel}</b> · we arrive between {slot}
+              </span>
+            </>
+          ) : day ? (
+            "Now pick an arrival window."
+          ) : (
+            "Pick a day, then an arrival window. We'll text you to confirm."
+          )}
+        </div>
+        <span className="err">{errs.slot}</span>
+      </div>
+
+      <div className="bk-step-h">
+        <span className="bk-n">2</span>
+        <b>Your details</b>
+        <span className="sp-hint">So we can confirm by text</span>
       </div>
       <div className="fields">
         <label className="f">
@@ -485,66 +682,6 @@ function BookingForm({ q }: { q: Quantities }) {
           <span className="err">{errs.zip}</span>
         </label>
 
-        <div className="f full slotpick">
-          <div className="sp-head">
-            <span>Pick a day</span>
-            <span className="sp-hint">Mon–Sat</span>
-          </div>
-          <div className="days" ref={daysRef} role="radiogroup" aria-label="Day">
-            {days.map((d) => (
-              <button
-                key={d.toDateString()}
-                type="button"
-                role="radio"
-                aria-checked={day?.toDateString() === d.toDateString()}
-                disabled={dayFull(d)}
-                aria-label={d.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
-                onClick={() => {
-                  setDay(d);
-                  if (slot && slotFull(d, slot)) setSlot(null);
-                }}
-              >
-                <small>{d.toLocaleDateString("en-US", { weekday: "short" })}</small>
-                <b>{d.getDate()}</b>
-                <span>{d.toLocaleDateString("en-US", { month: "short" })}</span>
-              </button>
-            ))}
-          </div>
-          <div className="sp-head">
-            <span>Arrival window</span>
-            <span className="sp-hint">We text when we're on the way</span>
-          </div>
-          <div className="slots" role="radiogroup" aria-label="Arrival window">
-            {ARRIVAL_WINDOWS.map((w) => (
-              <button
-                key={w}
-                type="button"
-                role="radio"
-                aria-checked={slot === w}
-                disabled={slotFull(day, w)}
-                onClick={() => setSlot(w)}
-              >
-                {w}
-                {slotFull(day, w) && <span className="sr-only"> (booked)</span>}
-              </button>
-            ))}
-          </div>
-          <p className="sp-sel">
-            {pickLabel ? (
-              <b>{pickLabel}</b>
-            ) : day ? (
-              "Now pick an arrival window."
-            ) : (
-              "Pick a day and arrival window."
-            )}
-          </p>
-          <span className="err">{errs.slot}</span>
-        </div>
-
         <label className="f full">
           <span>
             Gate code or anything we should know? <em>(pets, stains, stairs, parking)</em>
@@ -562,7 +699,7 @@ function BookingForm({ q }: { q: Quantities }) {
           We'll text you to confirm. No deposit and nothing to pay now; you pay after the job is
           done. Have photos of a stain? Text them to {BUSINESS.phoneDisplay}.
           <span className="consent" style={{ display: "block", marginTop: 6 }}>
-            By booking, you agree Simple Surface may call or text you about this request. See our
+            By booking, you agree Simple Surface may call or text you about this request. See our{" "}
             <a href="/privacy">Privacy Policy</a>.
           </span>
         </p>

@@ -239,8 +239,7 @@ export function Commercial() {
               </button>
               <p className="consent">
                 By requesting, you agree Simple Surface may call or text you about this request. See
-                our
-                <a href="/privacy">Privacy Policy</a>.
+                our <a href="/privacy">Privacy Policy</a>.
               </p>
               {status === "failed" && (
                 <p className="form-error" role="alert">
