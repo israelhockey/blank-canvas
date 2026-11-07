@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import { BUSINESS, CITIES, cityParam, money, textUsHref, type City } from "@/lib/site-data";
+import { CITY_CONTENT } from "@/lib/city-content";
 import { CITY_LOCAL } from "@/lib/city-local";
 import { GUIDES, SERVICE_PAGES } from "@/lib/seo-pages";
-import { ArrowIcon, AutoVideo, BeforeAfter, ClockIcon, LeafIcon, PlugIcon } from "./bits";
+import { ArrowIcon, AutoVideo, BeforeAfter, ClockIcon, LeafIcon, PlugIcon, imgSize } from "./bits";
 import { openQuickLead } from "./QuickLead";
 
 export function Notice() {
@@ -127,6 +128,7 @@ export function Hero({ city }: { city?: City | undefined }) {
       <AutoVideo
         className="hero-img"
         src="/vid/hero-duplex.mp4"
+        mobileSrc="/vid/hero-duplex-480.mp4"
         poster="/vid/hero-duplex-poster.jpg"
         eager
         autoPlay
@@ -270,9 +272,24 @@ export function CityIntro({ city }: { city: City }) {
 /** City pages: local details plus links to each service and guide (helps Google and visitors). */
 export function CityLocal({ city }: { city: City }) {
   const local = CITY_LOCAL[city.slug];
+  const content = CITY_CONTENT[city.slug];
   return (
     <section className="cp-body" id="city-services">
       <div className="wrap cp-article">
+        {content && (
+          <>
+            <h2>{content.h}</h2>
+            {content.p.map((t) => (
+              <p key={t.slice(0, 24)}>{t}</p>
+            ))}
+            <h3 className="cp-areas-h">Areas we clean in {city.name}</h3>
+            <ul className="cp-areas">
+              {content.areas.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          </>
+        )}
         <h2>{city.name} carpet cleaning services</h2>
         <p>
           Simple Surface Carpet Cleaning cleans homes, apartments, rentals and businesses all over{" "}
@@ -327,6 +344,7 @@ export function Why() {
           <figure className="why-fig">
             <img
               src="/img/outlet.jpg"
+              {...imgSize("/img/outlet.jpg")}
               alt="Portable cleaning machine plugged into a standard wall outlet"
               loading="lazy"
             />
@@ -480,7 +498,7 @@ export function Services() {
                 {s.video ? (
                   <AutoVideo src={s.video} poster={s.poster} aria-label={s.alt} />
                 ) : (
-                  <img src={s.img} alt={s.alt} loading="lazy" />
+                  <img src={s.img} {...imgSize(s.img)} alt={s.alt} loading="lazy" />
                 )}
                 <span className="lbl">{s.lbl}</span>
               </div>
@@ -668,7 +686,7 @@ export function Gallery() {
                 {t.video ? (
                   <AutoVideo src={t.video} poster={t.poster} aria-label={t.alt} />
                 ) : (
-                  <img src={t.img} alt={t.alt} loading="lazy" />
+                  <img src={t.img} {...imgSize(t.img)} alt={t.alt} loading="lazy" />
                 )}
                 <figcaption>
                   <b>{t.b}</b>
@@ -731,6 +749,7 @@ export function faqFor(city?: City): [string, string][] {
       `Do you offer carpet cleaning in ${city.name}, TX?`,
       `Yes. Simple Surface Carpet Cleaning cleans carpet, upholstery, rugs and tile for homes and businesses in ${city.name} and across ${city.county}. Book online in about a minute or call ${BUSINESS.phoneDisplay}.`,
     ],
+    ...(CITY_CONTENT[city.slug] ? [CITY_CONTENT[city.slug]!.faq] : []),
     ...(CITY_LOCAL[city.slug]
       ? ([
           [
@@ -795,7 +814,13 @@ export function AreasFaq({ city }: { city?: City | undefined }) {
 export function FinalCta() {
   return (
     <section className="final">
-      <img className="final-img" src="/img/home.jpg" alt="" loading="lazy" />
+      <img
+        className="final-img"
+        src="/img/home.jpg"
+        {...imgSize("/img/home.jpg")}
+        alt=""
+        loading="lazy"
+      />
       <div className="final-shade" aria-hidden="true" />
       <div className="wrap final-in">
         <h2>Ready for clean floors?</h2>

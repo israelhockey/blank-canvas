@@ -1,17 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { HubPage } from "@/components/site/HubPage";
-import { pageMeta } from "@/lib/seo";
-import { SERVICE_PAGES } from "@/lib/seo-pages";
+import { hubJsonLd, pageMeta } from "@/lib/seo";
+import { SERVICE_PAGES, pagePath } from "@/lib/seo-pages";
 
 export const Route = createFileRoute("/services/")({
-  head: () =>
-    pageMeta({
+  head: () => ({
+    ...pageMeta({
       title: "Carpet Cleaning Services Fort Worth | Simple Surface",
       description:
         "Every Simple Surface Carpet Cleaning service in Fort Worth and Tarrant County: upholstery, rugs, pet stains, move-out, tile and grout, and commercial carpet.",
       path: "/services",
     }),
+    scripts: hubJsonLd({
+      title: "Carpet cleaning services",
+      path: "/services",
+      pages: SERVICE_PAGES.map((p) => ({ h1: p.h1, path: pagePath(p) })),
+    }),
+  }),
   component: () => (
     <HubPage
       eyebrow="Services"

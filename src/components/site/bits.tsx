@@ -50,10 +50,30 @@ export const TickIcon = () => (
 /* ---------- muted looping video that plays only while on screen ---------- */
 type AutoVideoProps = Omit<VideoHTMLAttributes<HTMLVideoElement>, "src"> & {
   src: string;
+  mobileSrc?: string;
   eager?: boolean;
 };
 
-export function AutoVideo({ src, eager, className, ...rest }: AutoVideoProps) {
+/** Real pixel sizes of our photos, so the browser reserves space before they load (no layout jump). */
+const IMG_SIZES: Record<string, [number, number]> = {
+  "/img/carpet.jpg": [1100, 614],
+  "/img/carpet2.jpg": [800, 800],
+  "/img/gym-loft.jpg": [1600, 893],
+  "/img/hero-low.jpg": [1100, 614],
+  "/img/home.jpg": [1600, 893],
+  "/img/outlet.jpg": [1100, 614],
+  "/img/rug.jpg": [1100, 614],
+  "/img/rug2.jpg": [800, 800],
+  "/img/tile.jpg": [1100, 614],
+  "/vid/sofa-poster.jpg": [960, 540],
+  "/vid/gym-poster.jpg": [960, 540],
+};
+export const imgSize = (src: string | undefined) => {
+  const s = src ? IMG_SIZES[src] : undefined;
+  return s ? { width: s[0], height: s[1] } : {};
+};
+
+export function AutoVideo({ src, mobileSrc, eager, className, ...rest }: AutoVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -69,7 +89,7 @@ export function AutoVideo({ src, eager, className, ...rest }: AutoVideoProps) {
 
     let visible = false;
     const play = () => {
-      if (!v.getAttribute("src")) v.setAttribute("src", src);
+      if (!v.getAttribute("src") && !v.querySelector("source")) v.setAttribute("src", src);
       const p = v.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
     };
@@ -102,9 +122,17 @@ export function AutoVideo({ src, eager, className, ...rest }: AutoVideoProps) {
       loop
       playsInline
       preload={eager ? "auto" : "none"}
-      {...(eager ? { src } : {})}
+      {...(eager && !mobileSrc ? { src } : {})}
       {...rest}
-    />
+    >
+      {/* Phones get a lighter file (about 800 KB instead of 1.9 MB). */}
+      {eager && mobileSrc && (
+        <>
+          <source src={mobileSrc} type="video/mp4" media="(max-width: 767px)" />
+          <source src={src} type="video/mp4" />
+        </>
+      )}
+    </video>
   );
 }
 

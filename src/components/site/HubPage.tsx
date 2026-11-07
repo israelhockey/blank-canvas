@@ -1,3 +1,4 @@
+import { imgSize } from "./bits";
 import { pagePath, type ContentPage } from "@/lib/seo-pages";
 import { ExitIntent } from "./ExitIntent";
 import { QuickLead, openQuickLead } from "./QuickLead";
@@ -36,7 +37,7 @@ export function HubPage({
             <div className="cp-related-grid">
               {pages.map((p) => (
                 <a key={p.slug} className="cp-card" href={pagePath(p)}>
-                  <img src={p.image} alt="" loading="lazy" />
+                  <img src={p.image} {...imgSize(p.image)} alt="" loading="lazy" />
                   <b>{p.h1}</b>
                   <span>{p.description}</span>
                 </a>

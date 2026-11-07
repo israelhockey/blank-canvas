@@ -14,11 +14,14 @@ export const Route = createFileRoute("/carpet-cleaning/$city")({
   head: ({ loaderData }) => {
     const city = loaderData?.city;
     if (!city) return {};
+    // Keep titles near 60 characters so Google shows them in full.
+    const long = `${city.name}, TX Carpet Cleaning | $50/Room | Simple Surface`;
     return {
       ...pageMeta({
-        title: `${city.name} Carpet Cleaning | Simple Surface Carpet Cleaning`,
-        description: `Carpet cleaning in ${city.name}, TX from Simple Surface Carpet Cleaning. Low-moisture carpet, upholstery and rug cleaning, dry in hours. Flat $50 per room, no deposit, pay after the job.`,
+        title: long.length > 62 ? `${city.name}, TX Carpet Cleaning | Simple Surface` : long,
+        description: `Carpet cleaning in ${city.name}, TX: flat $50 per room, dry in hours, no hoses through your door. No deposit, pay after the job. Book online.`,
         path: `/carpet-cleaning/${cityParam(city)}`,
+        hero: true,
       }),
       scripts: businessJsonLd(city),
     };
