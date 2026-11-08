@@ -55,8 +55,9 @@ export function sourceName(raw: string | null | undefined) {
   const s = (raw ?? "").trim().toLowerCase();
   if (!s || s === "direct") return "direct";
   const first = s.split(" / ")[0]!.trim();
-  if (/(^|\.)facebook\.com$|^fb$|^l\.facebook|^lm\.facebook/.test(first)) return "facebook";
-  if (/(^|\.)instagram\.com$/.test(first)) return "instagram";
+  if (/(^|\.)facebook\.com$|^fb$|^l\.facebook|^lm\.facebook|^facebook( app)?$/.test(first))
+    return "facebook";
+  if (/(^|\.)instagram\.com$|^instagram app$/.test(first)) return "instagram";
   if (/(^|\.)google\./.test(first)) return "google";
   if (/(^|\.)bing\.com$/.test(first)) return "bing";
   if (/(^|\.)nextdoor\.com$/.test(first)) return "nextdoor";

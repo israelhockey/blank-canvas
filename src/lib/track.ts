@@ -48,7 +48,20 @@ export function leadSource(): string {
       document.referrer && !document.referrer.includes(window.location.host)
         ? new URL(document.referrer).hostname
         : "";
-    const src = utm || ref || "direct";
+    // Facebook/Instagram apps and some ad clicks hide the referring site; spot them anyway.
+    const ua = navigator.userAgent;
+    const hint = p.get("gclid")
+      ? "google ads"
+      : p.get("fbclid")
+        ? "facebook"
+        : /Instagram/i.test(ua)
+          ? "instagram app"
+          : /FBAN|FBAV|FB_IAB|FBIOS|Messenger/i.test(ua)
+            ? "facebook app"
+            : /\bLine\/|WhatsApp/i.test(ua)
+              ? "whatsapp"
+              : "";
+    const src = utm || ref || hint || "direct";
     sessionStorage.setItem("ss_source", src);
     return src;
   } catch {
