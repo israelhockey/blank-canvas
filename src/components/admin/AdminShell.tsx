@@ -32,12 +32,13 @@ const NAV = [
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;
 
-type Access = "loading" | "signed_out" | "not_team" | "ok";
+type Access = "loading" | "signed_out" | "not_team" | "error" | "ok";
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [access, setAccess] = useState<Access>("loading");
   const [open, setOpen] = useState(false);
+  const [err, setErr] = useState("");
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
@@ -46,10 +47,27 @@ export function AdminShell({ children }: { children: ReactNode }) {
     const check = async (s: Session | null) => {
       setSession(s);
       if (!s) return setAccess("signed_out");
-      const { data } = await c.rpc("claim_team_access");
+      // Show the real problem instead of hanging on "Loading…" or blaming the team list.
+      const timeout = new Promise<{ data: null; error: { message: string } }>((r) =>
+        window.setTimeout(
+          () => r({ data: null, error: { message: "The database didn't answer in 15 seconds." } }),
+          15000,
+        ),
+      );
+      const { data, error } = await Promise.race([c.rpc("claim_team_access"), timeout]);
+      if (error) {
+        setErr(error.message);
+        return setAccess("error");
+      }
       setAccess(data === true ? "ok" : "not_team");
     };
-    void c.auth.getSession().then(({ data }) => check(data.session));
+    void c.auth
+      .getSession()
+      .then(({ data }) => check(data.session))
+      .catch((e: Error) => {
+        setErr(e.message);
+        setAccess("error");
+      });
     const { data: sub } = c.auth.onAuthStateChange((_e, s) => void check(s));
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -74,6 +92,32 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </Centered>
     );
   if (access === "signed_out") return <SignIn />;
+  if (access === "error") {
+    return (
+      <Centered>
+        <h1 className="text-xl font-bold">Couldn&apos;t open the back office</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Signed in as {session?.user.email ?? "unknown"}, but the database returned an error:
+        </p>
+        <p className="mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40">
+          {err}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <Button onClick={() => window.location.reload()}>Try again</Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              void db()
+                ?.auth.signOut()
+                .then(() => window.location.reload())
+            }
+          >
+            Sign out
+          </Button>
+        </div>
+      </Centered>
+    );
+  }
   if (access === "not_team") {
     return (
       <Centered>
