@@ -68,7 +68,13 @@ export async function runAutomations() {
   const now = central();
   const daytime = now.hour >= 10 && now.hour < 18;
   const evening = now.hour >= 16 && now.hour < 20;
-  const sent = { reminders: 0, quote_followups: 0, reviews: 0, unfinished_alerts: 0 };
+  const sent = {
+    reminders: 0,
+    quote_followups: 0,
+    reviews: 0,
+    unfinished_alerts: 0,
+    square_paid: 0,
+  };
   const errors: string[] = [];
 
   const { data: rows } = await db.from("settings").select("key,value");
@@ -299,6 +305,64 @@ export async function runAutomations() {
         .eq("id", l.id);
       if (r.ok) sent.unfinished_alerts++;
       else errors.push(`unfinished ${l.name}: ${r.error}`);
+    }
+  }
+
+  /* ---- Square: mark invoices paid once the customer pays (every run, any hour) ---- */
+  const token = process.env["SQUARE_ACCESS_TOKEN"];
+  if (token) {
+    const base =
+      process.env["SQUARE_ENVIRONMENT"] === "sandbox"
+        ? "https://connect.squareupsandbox.com"
+        : "https://connect.squareup.com";
+    const since = new Date(Date.now() - 60 * 86400e3).toISOString();
+    const { data: open } = await db
+      .from("invoices")
+      .select("id,job_id,customer_id,square_invoice_id,amount")
+      .eq("method", "square")
+      .eq("status", "sent")
+      .not("square_invoice_id", "is", null)
+      .gte("created_at", since)
+      .limit(50);
+    for (const inv of (open ?? []) as {
+      id: string;
+      job_id: string | null;
+      customer_id: string;
+      square_invoice_id: string;
+      amount: number;
+    }[]) {
+      try {
+        const res = await fetch(
+          `${base}/v2/invoices/${encodeURIComponent(inv.square_invoice_id)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Square-Version": process.env["SQUARE_API_VERSION"] || "2024-10-17",
+            },
+          },
+        );
+        if (!res.ok) throw new Error(`Square ${res.status}`);
+        const status = ((await res.json()) as { invoice?: { status?: string } }).invoice?.status;
+        if (status === "PAID") {
+          const at = new Date().toISOString();
+          await db.from("invoices").update({ status: "paid", paid_at: at }).eq("id", inv.id);
+          await db
+            .from("customers")
+            .update({ stage: "paid", updated_at: at })
+            .eq("id", inv.customer_id);
+          await db.from("activities").insert({
+            customer_id: inv.customer_id,
+            job_id: inv.job_id,
+            kind: "status",
+            body: `Paid in Square: $${Number(inv.amount).toFixed(2)}`,
+          });
+          sent.square_paid++;
+        } else if (status === "CANCELED") {
+          await db.from("invoices").update({ status: "canceled" }).eq("id", inv.id);
+        }
+      } catch (e) {
+        errors.push(`square ${inv.square_invoice_id}: ${(e as Error).message}`);
+      }
     }
   }
 
