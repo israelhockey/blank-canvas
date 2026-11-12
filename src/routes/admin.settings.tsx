@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { Field, PageHeader, Panel, selectClass } from "@/components/admin/ui";
+import { GoogleCalendarConnection } from "@/components/admin/GoogleCalendarConnection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sendTestEmail, squareStatus } from "@/lib/admin.functions";
@@ -12,7 +13,19 @@ import { saveSetting, useRefresh, useSettings, type AutomationSettings } from "@
 import { accessToken, dbOrThrow } from "@/lib/db";
 import type { CommissionRule, TeamInvite, TeamMember } from "@/lib/db-types";
 
-export const Route = createFileRoute("/admin/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/admin/settings")({
+  head: () => ({
+    meta: [
+      { title: "Business settings | Simple Surface" },
+      { name: "description", content: "Manage Simple Surface team, calendar connections and business settings." },
+      { property: "og:title", content: "Business settings | Simple Surface" },
+      { property: "og:description", content: "Manage Simple Surface team, calendar connections and business settings." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: SettingsPage,
+});
 
 function SettingsPage() {
   const settings = useSettings();
@@ -76,6 +89,7 @@ function SettingsPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="Settings" />
+      <GoogleCalendarConnection />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Partner commission">
           <div className="grid gap-3 sm:grid-cols-2">
