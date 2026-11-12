@@ -18,6 +18,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
+import { Route as AdminHanksRouteImport } from './routes/admin.hanks'
 import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
@@ -79,6 +80,11 @@ const AdminCalendarRoute = AdminCalendarRouteImport.update({
 const AdminCommissionRoute = AdminCommissionRouteImport.update({
   id: '/commission',
   path: '/commission',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminHanksRoute = AdminHanksRouteImport.update({
+  id: '/hanks',
+  path: '/hanks',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMarketingRoute = AdminMarketingRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
+  '/admin/hanks': typeof AdminHanksRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
+  '/admin/hanks': typeof AdminHanksRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/commission': typeof AdminCommissionRoute
+  '/admin/hanks': typeof AdminHanksRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stats': typeof AdminStatsRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
+    | '/admin/hanks'
     | '/admin/marketing'
     | '/admin/settings'
     | '/admin/stats'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
+    | '/admin/hanks'
     | '/admin/marketing'
     | '/admin/settings'
     | '/admin/stats'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/calendar'
     | '/admin/commission'
+    | '/admin/hanks'
     | '/admin/marketing'
     | '/admin/settings'
     | '/admin/stats'
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/commission'
       fullPath: '/admin/commission'
       preLoaderRoute: typeof AdminCommissionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/hanks': {
+      id: '/admin/hanks'
+      path: '/hanks'
+      fullPath: '/admin/hanks'
+      preLoaderRoute: typeof AdminHanksRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/marketing': {
@@ -547,6 +566,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminCommissionRoute: typeof AdminCommissionRoute
+  AdminHanksRoute: typeof AdminHanksRoute
   AdminMarketingRoute: typeof AdminMarketingRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStatsRoute: typeof AdminStatsRoute
@@ -560,6 +580,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminCommissionRoute: AdminCommissionRoute,
+  AdminHanksRoute: AdminHanksRoute,
   AdminMarketingRoute: AdminMarketingRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStatsRoute: AdminStatsRoute,
