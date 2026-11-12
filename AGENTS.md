@@ -32,3 +32,4 @@ use the editor.
 - Keep managed email templates and their server-only sender in `src/lib/email-templates`; the authenticated `/lovable/email/transactional/preview` route supports the Emails dashboard without exposing a send endpoint.
 - Keep server environment loading out of client defines; alias only React Email's legacy entities/lib imports to the hoisted v4 copy, leaving modern entities subpaths to resolve against each importer's compatible version.
 - Keep owner-authorized Google Calendar integration separate from the existing read-only calendar feed; show a setup-needed state until an App User Connector client is linked, so consent is never falsely presented as available.
+- The Settings Sync Google Calendar button uses the existing read-only ICS subscription, not OAuth; reuse the saved feed token and never claim subscription completion from merely opening Google.

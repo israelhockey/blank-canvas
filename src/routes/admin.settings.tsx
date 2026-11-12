@@ -89,7 +89,7 @@ function SettingsPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="Settings" />
-      <GoogleCalendarConnection />
+      <GoogleCalendarConnection loading={settings.isLoading} onChange={refresh} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Partner commission">
           <div className="grid gap-3 sm:grid-cols-2">

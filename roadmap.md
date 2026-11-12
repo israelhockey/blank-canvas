@@ -1,5 +1,5 @@
 # Tasks
 
-- [x] Show the Google Calendar connection section at the top of admin Settings.
-- [ ] Let the owner connect his Google account from admin settings. Blocked: Google Calendar OAuth client has not been configured or linked.
-- [ ] Add a saved job to the connected business Google Calendar. Blocked: requires the owner's authorized Google Calendar connection.
+- [x] Replace the unavailable connection with a Sync Google Calendar subscription button in admin Settings.
+- [x] Test calendar link creation and reuse without Google developer setup; existing feed tests pass.
+- [ ] Confirm Google subscription from the owner's account. Blocked: owner must sign in to Google and approve Add; preview has no available signed-in app session.
