@@ -12,7 +12,7 @@ export const Route = createFileRoute("/llms.txt")({
     handlers: {
       GET: () => {
         const o = SITE_ORIGIN;
-        const list = (kind: "service" | "guide") =>
+        const list = (kind: "service" | "guide" | "local") =>
           ALL_PAGES.filter((p) => p.kind === kind)
             .map((p) => `- [${p.h1}](${o}${pagePath(p)}): ${p.description}`)
             .join("\n");
@@ -45,6 +45,10 @@ ${list("service")}
 ## Guides
 
 ${list("guide")}
+
+## Keller, TX
+
+${list("local")}
 `;
         return new Response(body, {
           headers: { "content-type": "text/plain; charset=utf-8" },

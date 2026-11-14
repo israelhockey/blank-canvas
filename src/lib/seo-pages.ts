@@ -1,4 +1,5 @@
-import type { Quantities } from "./site-data";
+import { LOCAL_PAGES, LOVESEAT_PHOTOS } from "./local-pages";
+import { CITIES, cityParam, type Quantities } from "./site-data";
 
 /*
  * Service pages (/services/<slug>) and guides (/guides/<slug>).
@@ -7,8 +8,15 @@ import type { Quantities } from "./site-data";
 
 export type Block = { h: string; p: string[]; list?: string[] };
 
+/** A real job photo: descriptive file name, alt text for Google, caption for people. */
+export type Photo = { src: string; alt: string; caption: string };
+
 export type ContentPage = {
-  kind: "service" | "guide";
+  kind: "service" | "guide" | "local";
+  /** Local pages only: the CITIES slug, e.g. "keller" → /carpet-cleaning/keller-tx/<slug> */
+  city?: string;
+  /** Real before/after photos shown on the page */
+  gallery?: Photo[];
   slug: string;
   /** <title>, ~60 characters, main keyword first */
   title: string;
@@ -52,6 +60,7 @@ export const SERVICE_PAGES: ContentPage[] = [
     serviceType: "Upholstery cleaning",
     lowPrice: 50,
     preset: { sofa: 1, chair: 1 },
+    gallery: LOVESEAT_PHOTOS,
     blocks: [
       {
         h: "Flat upholstery cleaning prices",
@@ -121,7 +130,7 @@ export const SERVICE_PAGES: ContentPage[] = [
     h1: "Area rug cleaning in Fort Worth, done in place",
     intro:
       "We clean area rugs right where they lie, so there's no rolling, hauling or waiting a week for a pickup service. Standard rugs up to 8×10 are $50 and oversize rugs are $100, with no deposit and payment after the job.",
-    image: "/img/rug.jpg",
+    image: "/img/area-rug-cleaned-in-place.jpg",
     imageAlt: "Cleaning wand leaving a bright clean stripe across an area rug",
     price: "Standard rugs $50 · Oversize rugs $100",
     serviceType: "Rug cleaning",
@@ -192,7 +201,7 @@ export const SERVICE_PAGES: ContentPage[] = [
     h1: "Pet stain & odor removal for carpet in Fort Worth",
     intro:
       "Accidents happen. We clean pet stains out of carpet, rugs and upholstery with eco-friendly solutions, and treat odor where it starts. Rooms are a flat $50, and heavy odor treatment is quoted on site once we can see what's going on.",
-    image: "/img/home.jpg",
+    image: "/img/clean-carpet-living-room-with-dog.jpg",
     imageAlt: "Dog relaxing on clean carpet in a bright living room",
     price: "Rooms $50 · Odor treatment quoted on site",
     serviceType: "Pet stain and odor removal",
@@ -260,7 +269,7 @@ export const SERVICE_PAGES: ContentPage[] = [
     h1: "Move-out carpet cleaning in Fort Worth",
     intro:
       "Get the carpet clean before the final walkthrough, the listing photos or the new tenant. Rooms are a flat $50, a master suite is $100, and low-moisture cleaning means the carpet is dry in hours, not holding up your move.",
-    image: "/img/hero-low.jpg",
+    image: "/img/low-moisture-carpet-cleaning-living-room.jpg",
     imageAlt: "Carpet being cleaned in an empty home between tenants",
     price: "Rooms $50 · Master suite $100",
     serviceType: "Move-out carpet cleaning",
@@ -332,7 +341,7 @@ export const SERVICE_PAGES: ContentPage[] = [
     h1: "Tile & grout cleaning in Fort Worth",
     intro:
       "Kitchens, bathrooms and entryways scrubbed and steamed so the grout lines come back to their real color. Tile is priced like a room, so it's easy to add to your carpet cleaning in the same visit.",
-    image: "/img/tile.jpg",
+    image: "/img/tile-and-grout-scrubbing-kitchen-floor.jpg",
     imageAlt: "Scrubbing dirty grout lines on a kitchen tile floor",
     price: "Priced like a room · Same visit as your carpet",
     serviceType: "Tile and grout cleaning",
@@ -395,7 +404,7 @@ export const SERVICE_PAGES: ContentPage[] = [
     h1: "Commercial carpet cleaning in Fort Worth",
     intro:
       "Offices, gyms, studios, salons, churches and rental properties cleaned around your hours. Commercial carpet and rubber gym floors start at $0.25 per square foot, and we'll do a free walkthrough to give you an exact price.",
-    image: "/img/gym-loft.jpg",
+    image: "/img/commercial-gym-floor-cleaning.jpg",
     imageAlt: "Technician cleaning rubber gym flooring with a floor machine",
     price: "From $0.25 per sq ft · Free walkthrough",
     serviceType: "Commercial carpet cleaning",
@@ -467,7 +476,7 @@ export const GUIDES: ContentPage[] = [
     h1: "How much does carpet cleaning cost in Fort Worth?",
     intro:
       "At Simple Surface Carpet Cleaning, carpet cleaning in Fort Worth is a flat $50 per room and $100 for a master suite. Sofas are $100, chairs $50 and rugs from $50, plus 8.25% Texas sales tax. Here's how pricing works, with real examples.",
-    image: "/img/carpet.jpg",
+    image: "/img/carpet-cleaning-wand-light-carpet.jpg",
     imageAlt: "Steam cleaning wand on light carpet",
     preset: { room: 3, master: 1, sofa: 1 },
     blocks: [
@@ -539,7 +548,7 @@ export const GUIDES: ContentPage[] = [
     h1: "How long does carpet take to dry after cleaning?",
     intro:
       "After low-moisture cleaning, carpet is usually dry in a few hours. Heavier wet-cleaning methods can take much longer. How fast yours dries depends on the method, the carpet and the air in the room.",
-    image: "/img/hero-low.jpg",
+    image: "/img/low-moisture-carpet-cleaning-living-room.jpg",
     imageAlt: "Freshly cleaned carpet drying in an empty room",
     preset: { room: 3, master: 1 },
     blocks: [
@@ -668,7 +677,7 @@ export const GUIDES: ContentPage[] = [
     h1: "How to get pet urine out of carpet",
     intro:
       "The faster you act, the better your chances. Blot up as much as you can, rinse with cold water, and use an enzyme cleaner made for pet urine. Skip hot water, steam and ammonia on fresh urine, which can make the smell harder to get out.",
-    image: "/img/home.jpg",
+    image: "/img/clean-carpet-living-room-with-dog.jpg",
     imageAlt: "Dog lying on carpet in a bright living room",
     preset: { room: 2 },
     blocks: [
@@ -730,7 +739,7 @@ export const GUIDES: ContentPage[] = [
     h1: "Move-out carpet cleaning checklist",
     intro:
       "Moving out is busy enough. Use this checklist to get the carpet ready for the final walkthrough without holding up your move. With low-moisture cleaning, the carpet is usually dry in a few hours.",
-    image: "/img/hero-low.jpg",
+    image: "/img/low-moisture-carpet-cleaning-living-room.jpg",
     imageAlt: "Empty room with freshly cleaned carpet",
     preset: { room: 3, master: 1 },
     blocks: [
@@ -792,7 +801,7 @@ export const GUIDES: ContentPage[] = [
     h1: "How often should you clean your carpet?",
     intro:
       "Many carpet manufacturers recommend professional cleaning every 12 to 18 months, and some warranties require it. Homes with pets, kids, allergies or heavy foot traffic often do better with cleaning every 6 to 12 months.",
-    image: "/img/carpet2.jpg",
+    image: "/img/low-moisture-carpet-cleaning-close-up.jpg",
     imageAlt: "Close-up of a carpet being cleaned",
     preset: { room: 3, master: 1 },
     blocks: [
@@ -856,9 +865,19 @@ export const GUIDES: ContentPage[] = [
   }),
 ];
 
-export const ALL_PAGES = [...SERVICE_PAGES, ...GUIDES];
-export const findPage = (kind: ContentPage["kind"], slug: string) =>
-  ALL_PAGES.find((p) => p.kind === kind && p.slug === slug);
-export const pagePath = (p: ContentPage) =>
-  p.kind === "service" ? `/services/${p.slug}` : `/guides/${p.slug}`;
-export const pageBySlug = (slug: string) => ALL_PAGES.find((p) => p.slug === slug);
+export { LOCAL_PAGES };
+export const ALL_PAGES = [...SERVICE_PAGES, ...GUIDES, ...LOCAL_PAGES];
+export const findPage = (kind: ContentPage["kind"], slug: string, city?: string) =>
+  ALL_PAGES.find((p) => p.kind === kind && p.slug === slug && (!city || p.city === city));
+export const cityOf = (p: ContentPage) => CITIES.find((c) => c.slug === p.city);
+export const pagePath = (p: ContentPage) => {
+  if (p.kind === "local") {
+    const c = cityOf(p);
+    return `/carpet-cleaning/${c ? cityParam(c) : p.city}/${p.slug}`;
+  }
+  return p.kind === "service" ? `/services/${p.slug}` : `/guides/${p.slug}`;
+};
+/** "upholstery-cleaning" for site-wide pages, "keller/upholstery-cleaning" for city pages. */
+export const pageKey = (p: ContentPage) => (p.kind === "local" ? `${p.city}/${p.slug}` : p.slug);
+export const pageBySlug = (key: string) => ALL_PAGES.find((p) => pageKey(p) === key);
+export const localPagesFor = (citySlug: string) => LOCAL_PAGES.filter((p) => p.city === citySlug);

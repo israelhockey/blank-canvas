@@ -1,6 +1,14 @@
 import { useCallback, useState } from "react";
 
-import { pagePath, pageBySlug, type ContentPage } from "@/lib/seo-pages";
+import { CITY_CONTENT } from "@/lib/city-content";
+import {
+  cityOf,
+  localPagesFor,
+  pageKey,
+  pagePath,
+  pageBySlug,
+  type ContentPage,
+} from "@/lib/seo-pages";
 import {
   BUSINESS,
   CITIES,
@@ -11,6 +19,7 @@ import {
   totals,
   type Quantities,
 } from "@/lib/site-data";
+import { imgSize } from "./bits";
 import { Commercial } from "./Commercial";
 import { Pricing } from "./Pricing";
 import { ExitIntent } from "./ExitIntent";
@@ -29,7 +38,13 @@ export function ContentPageView({ page }: { page: ContentPage }) {
   const [preset, setPreset] = useState<string | null>(null);
   const [inPricing, setInPricing] = useState(false);
   const onVisible = useCallback((v: boolean) => setInPricing(v), []);
-  const section = page.kind === "service" ? "Services" : "Guides";
+  const city = cityOf(page);
+  const section =
+    page.kind === "local" && city
+      ? { label: city.name, href: `/carpet-cleaning/${cityParam(city)}` }
+      : page.kind === "service"
+        ? { label: "Services", href: "/services" }
+        : { label: "Guides", href: "/guides" };
   const topic = page.serviceType ?? page.h1.replace(/\?$/, "");
   const local = page.commercial
     ? ["#faq", "#areas", "#commercial"]
@@ -45,7 +60,7 @@ export function ContentPageView({ page }: { page: ContentPage }) {
               <nav className="crumbs" aria-label="Breadcrumb">
                 <a href="/">Home</a>
                 <span aria-hidden="true">›</span>
-                <span>{section}</span>
+                <a href={section.href}>{section.label}</a>
                 <span aria-hidden="true">›</span>
                 <span aria-current="page">{topic}</span>
               </nav>
@@ -103,24 +118,68 @@ export function ContentPageView({ page }: { page: ContentPage }) {
               </section>
             ))}
 
-            <section id="areas">
-              <h2>{page.kind === "service" ? `${topic} near you` : "Where we clean"}</h2>
-              <p>
-                Simple Surface Carpet Cleaning is based in Fort Worth and serves Tarrant County.
-                Pick your city for local details:
-              </p>
-              <ul className="cp-cities">
-                {CITIES.map((c) => (
-                  <li key={c.slug}>
-                    <a href={`/carpet-cleaning/${cityParam(c)}`}>
-                      {page.kind === "service"
-                        ? `${topic} in ${c.name}`
-                        : `Carpet cleaning in ${c.name}`}
+            {!!page.gallery?.length && (
+              <section className="cp-gallery-wrap">
+                <h2>Real results from a recent job</h2>
+                <div className="cp-gallery">
+                  {page.gallery.map((g) => (
+                    <figure key={g.src}>
+                      <img src={g.src} {...imgSize(g.src)} alt={g.alt} loading="lazy" />
+                      <figcaption>{g.caption}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {page.kind === "local" && city ? (
+              <section id="areas">
+                <h2>More from Simple Surface in {city.name}</h2>
+                <ul className="cp-cities">
+                  <li>
+                    <a href={`/carpet-cleaning/${cityParam(city)}`}>
+                      Carpet cleaning in {city.name}
                     </a>
                   </li>
-                ))}
-              </ul>
-            </section>
+                  {localPagesFor(city.slug)
+                    .filter((p) => p.slug !== page.slug)
+                    .map((p) => (
+                      <li key={p.slug}>
+                        <a href={pagePath(p)}>{p.h1}</a>
+                      </li>
+                    ))}
+                </ul>
+                {CITY_CONTENT[city.slug] && (
+                  <>
+                    <h3 className="cp-areas-h">Neighborhoods we clean in {city.name}</h3>
+                    <ul className="cp-areas">
+                      {CITY_CONTENT[city.slug]!.areas.map((a) => (
+                        <li key={a}>{a}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </section>
+            ) : (
+              <section id="areas">
+                <h2>{page.kind === "service" ? `${topic} near you` : "Where we clean"}</h2>
+                <p>
+                  Simple Surface Carpet Cleaning is based in Fort Worth and serves Tarrant County.
+                  Pick your city for local details:
+                </p>
+                <ul className="cp-cities">
+                  {CITIES.map((c) => (
+                    <li key={c.slug}>
+                      <a href={`/carpet-cleaning/${cityParam(c)}`}>
+                        {page.kind === "service"
+                          ? `${topic} in ${c.name}`
+                          : `Carpet cleaning in ${c.name}`}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </div>
         </article>
 
@@ -152,8 +211,14 @@ export function ContentPageView({ page }: { page: ContentPage }) {
                 .map((s) => pageBySlug(s))
                 .filter((p): p is ContentPage => !!p)
                 .map((p) => (
-                  <a key={p.slug} className="cp-card" href={pagePath(p)}>
-                    <span className="eyebrow">{p.kind === "service" ? "Service" : "Guide"}</span>
+                  <a key={pageKey(p)} className="cp-card" href={pagePath(p)}>
+                    <span className="eyebrow">
+                      {p.kind === "service"
+                        ? "Service"
+                        : p.kind === "local"
+                          ? (cityOf(p)?.name ?? "Local")
+                          : "Guide"}
+                    </span>
                     <b>{p.h1}</b>
                     <span>{p.description}</span>
                   </a>

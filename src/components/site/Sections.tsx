@@ -4,7 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { BUSINESS, CITIES, cityParam, money, textUsHref, type City } from "@/lib/site-data";
 import { CITY_CONTENT } from "@/lib/city-content";
 import { CITY_LOCAL } from "@/lib/city-local";
-import { GUIDES, SERVICE_PAGES } from "@/lib/seo-pages";
+import { LOVESEAT_PHOTOS } from "@/lib/local-pages";
+import { GUIDES, SERVICE_PAGES, localPagesFor, pagePath } from "@/lib/seo-pages";
 import { ArrowIcon, AutoVideo, BeforeAfter, ClockIcon, LeafIcon, PlugIcon, imgSize } from "./bits";
 import { openQuickLead } from "./QuickLead";
 
@@ -305,14 +306,34 @@ export function CityLocal({ city }: { city: City }) {
           deposit, and you pay after the job.
         </p>
         <ul className="cp-cities">
-          {SERVICE_PAGES.map((sp) => (
-            <li key={sp.slug}>
-              <a href={`/services/${sp.slug}`}>
-                {sp.serviceType} in {city.name}
-              </a>
-            </li>
-          ))}
+          {SERVICE_PAGES.map((sp) => {
+            // A page written for this city beats the general one.
+            const mine = localPagesFor(city.slug).find((lp) => lp.slug === sp.slug);
+            return (
+              <li key={sp.slug}>
+                <a href={mine ? pagePath(mine) : `/services/${sp.slug}`}>
+                  {sp.serviceType} in {city.name}
+                </a>
+              </li>
+            );
+          })}
+          {localPagesFor(city.slug)
+            .filter((lp) => !SERVICE_PAGES.some((sp) => sp.slug === lp.slug))
+            .map((lp) => (
+              <li key={lp.slug}>
+                <a href={pagePath(lp)}>{lp.h1.replace(/\?$/, "")}</a>
+              </li>
+            ))}
         </ul>
+        <h3 className="cp-areas-h">Recent work</h3>
+        <div className="cp-gallery">
+          {LOVESEAT_PHOTOS.map((g) => (
+            <figure key={g.src}>
+              <img src={g.src} {...imgSize(g.src)} alt={g.alt} loading="lazy" />
+              <figcaption>{g.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
         {local && (
           <p>
             ZIP codes we serve in and around {city.name}: {local.zips.join(", ")}. Not sure if
@@ -343,8 +364,8 @@ export function Why() {
           </div>
           <figure className="why-fig">
             <img
-              src="/img/outlet.jpg"
-              {...imgSize("/img/outlet.jpg")}
+              src="/img/portable-carpet-cleaner-plugged-into-wall-outlet.jpg"
+              {...imgSize("/img/portable-carpet-cleaner-plugged-into-wall-outlet.jpg")}
               alt="Portable cleaning machine plugged into a standard wall outlet"
               loading="lazy"
             />
@@ -404,7 +425,7 @@ const SERVICES: {
   from: React.ReactNode;
 }[] = [
   {
-    img: "/img/carpet.jpg",
+    img: "/img/carpet-cleaning-wand-light-carpet.jpg",
     alt: "Steam cleaning carpet",
     lbl: "Carpet",
     h: "Carpet cleaning",
@@ -429,7 +450,7 @@ const SERVICES: {
     ),
   },
   {
-    img: "/img/rug.jpg",
+    img: "/img/area-rug-cleaned-in-place.jpg",
     alt: "Cleaning a patterned area rug",
     lbl: "Area rugs",
     h: "Area rugs",
@@ -441,7 +462,7 @@ const SERVICES: {
     ),
   },
   {
-    img: "/img/tile.jpg",
+    img: "/img/tile-and-grout-scrubbing-kitchen-floor.jpg",
     alt: "Scrubbing grout lines on a kitchen tile floor",
     lbl: "Tile & grout",
     h: "Tile & grout",
@@ -449,7 +470,7 @@ const SERVICES: {
     from: <>Included with room pricing</>,
   },
   {
-    img: "/img/gym-loft.jpg",
+    img: "/img/commercial-gym-floor-cleaning.jpg",
     alt: "Technician cleaning rubber gym flooring",
     lbl: "Rubber floors",
     h: "Gym floors",
@@ -461,7 +482,7 @@ const SERVICES: {
     ),
   },
   {
-    img: "/img/hero-low.jpg",
+    img: "/img/low-moisture-carpet-cleaning-living-room.jpg",
     alt: "Carpet cleaning in an empty home between tenants",
     lbl: "Commercial",
     h: "Offices & rentals",
@@ -652,13 +673,13 @@ const TILES: {
     s: "No truck, no hoses through your door",
   },
   {
-    img: "/img/rug2.jpg",
+    img: "/img/oriental-rug-cleaning-wand.jpg",
     alt: "Cleaning a patterned area rug",
     b: "Rugs in place",
     s: "Cleaned right on your floor",
   },
   {
-    img: "/img/carpet2.jpg",
+    img: "/img/low-moisture-carpet-cleaning-close-up.jpg",
     alt: "Steam lifting carpet fibers",
     b: "Low moisture",
     s: "Fibers lifted, not soaked",
@@ -816,8 +837,8 @@ export function FinalCta() {
     <section className="final">
       <img
         className="final-img"
-        src="/img/home.jpg"
-        {...imgSize("/img/home.jpg")}
+        src="/img/clean-carpet-living-room-with-dog.jpg"
+        {...imgSize("/img/clean-carpet-living-room-with-dog.jpg")}
         alt=""
         loading="lazy"
       />

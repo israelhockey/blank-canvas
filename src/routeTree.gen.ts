@@ -35,6 +35,7 @@ import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$
 import { Route as AdminQuotesIndexRouteImport } from './routes/admin.quotes.index'
 import { Route as AdminQuotesIdRouteImport } from './routes/admin.quotes.$id'
 import { Route as ApiPublicAutomationsRouteImport } from './routes/api.public.automations'
+import { Route as CarpetCleaningCityServiceRouteImport } from './routes/carpet-cleaning.$city_.$service'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -167,6 +168,12 @@ const ApiPublicAutomationsRoute = ApiPublicAutomationsRouteImport.update({
   path: '/api/public/automations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CarpetCleaningCityServiceRoute =
+  CarpetCleaningCityServiceRouteImport.update({
+    id: '/carpet-cleaning/$city_/$service',
+    path: '/carpet-cleaning/$city/$service',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -199,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
   '/api/public/automations': typeof ApiPublicAutomationsRoute
+  '/carpet-cleaning/$city/$service': typeof CarpetCleaningCityServiceRoute
   '/admin/customers/': typeof AdminCustomersIndexRoute
   '/admin/quotes/': typeof AdminQuotesIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
   '/api/public/automations': typeof ApiPublicAutomationsRoute
+  '/carpet-cleaning/$city/$service': typeof CarpetCleaningCityServiceRoute
   '/admin/customers': typeof AdminCustomersIndexRoute
   '/admin/quotes': typeof AdminQuotesIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/quotes/$id': typeof AdminQuotesIdRoute
   '/api/public/automations': typeof ApiPublicAutomationsRoute
+  '/carpet-cleaning/$city_/$service': typeof CarpetCleaningCityServiceRoute
   '/admin/customers/': typeof AdminCustomersIndexRoute
   '/admin/quotes/': typeof AdminQuotesIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
     | '/api/public/automations'
+    | '/carpet-cleaning/$city/$service'
     | '/admin/customers/'
     | '/admin/quotes/'
     | '/lovable/email/transactional/preview'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
     | '/api/public/automations'
+    | '/carpet-cleaning/$city/$service'
     | '/admin/customers'
     | '/admin/quotes'
     | '/lovable/email/transactional/preview'
@@ -345,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin/customers/$id'
     | '/admin/quotes/$id'
     | '/api/public/automations'
+    | '/carpet-cleaning/$city_/$service'
     | '/admin/customers/'
     | '/admin/quotes/'
     | '/lovable/email/transactional/preview'
@@ -366,6 +379,7 @@ export interface RootRouteChildren {
   GuidesIndexRoute: typeof GuidesIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
   ApiPublicAutomationsRoute: typeof ApiPublicAutomationsRoute
+  CarpetCleaningCityServiceRoute: typeof CarpetCleaningCityServiceRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -553,6 +567,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAutomationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/carpet-cleaning/$city_/$service': {
+      id: '/carpet-cleaning/$city_/$service'
+      path: '/carpet-cleaning/$city/$service'
+      fullPath: '/carpet-cleaning/$city/$service'
+      preLoaderRoute: typeof CarpetCleaningCityServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -609,6 +630,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesIndexRoute: GuidesIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
   ApiPublicAutomationsRoute: ApiPublicAutomationsRoute,
+  CarpetCleaningCityServiceRoute: CarpetCleaningCityServiceRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport

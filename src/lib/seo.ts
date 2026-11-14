@@ -1,5 +1,5 @@
 import { BUSINESS, CITIES, SITE_ORIGIN, cityParam, type City } from "./site-data";
-import { pagePath, type ContentPage } from "./seo-pages";
+import { cityOf, pagePath, type ContentPage } from "./seo-pages";
 import { faqFor } from "@/components/site/Sections";
 import siteCss from "@/site.css?url";
 
@@ -180,59 +180,64 @@ export function businessJsonLd(city?: City) {
 /** Structured data for a service page or guide: Service/Article + FAQ + breadcrumbs. */
 export function contentJsonLd(page: ContentPage) {
   const url = abs(pagePath(page));
-  const main =
-    page.kind === "service"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Service",
-          name: page.h1,
-          serviceType: page.serviceType,
-          description: page.description,
-          url,
-          image: abs(page.image),
-          provider: { "@id": `${SITE_URL}/#business` },
-          areaServed: CITIES.map((c) => ({ "@type": "City", name: `${c.name}, TX` })),
-          ...(page.commercial
+  const city = cityOf(page);
+  const images = [page.image, ...(page.gallery ?? []).map((g) => g.src)].map((src) => abs(src));
+  const isService = page.kind === "service" || (page.kind === "local" && !!page.serviceType);
+  const main = isService
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        name: page.h1,
+        serviceType: page.serviceType,
+        description: page.description,
+        url,
+        image: images,
+        provider: { "@id": `${SITE_URL}/#business` },
+        areaServed: (city ? [city] : CITIES).map((c) => ({
+          "@type": "City",
+          name: `${c.name}, TX`,
+        })),
+        ...(page.commercial
+          ? {
+              offers: {
+                "@type": "Offer",
+                priceCurrency: "USD",
+                priceSpecification: {
+                  "@type": "UnitPriceSpecification",
+                  price: 0.25,
+                  priceCurrency: "USD",
+                  unitText: "square foot",
+                },
+              },
+            }
+          : page.lowPrice
             ? {
                 offers: {
-                  "@type": "Offer",
+                  "@type": "AggregateOffer",
                   priceCurrency: "USD",
-                  priceSpecification: {
-                    "@type": "UnitPriceSpecification",
-                    price: 0.25,
-                    priceCurrency: "USD",
-                    unitText: "square foot",
-                  },
+                  lowPrice: page.lowPrice,
+                  highPrice: 100,
                 },
               }
-            : page.lowPrice
-              ? {
-                  offers: {
-                    "@type": "AggregateOffer",
-                    priceCurrency: "USD",
-                    lowPrice: page.lowPrice,
-                    highPrice: 100,
-                  },
-                }
-              : {}),
-        }
-      : {
-          "@context": "https://schema.org",
-          "@type": "Article",
-          headline: page.h1,
-          description: page.description,
-          url,
-          image: abs(page.image),
-          datePublished: "2026-11-06",
-          dateModified: "2026-11-06",
-          author: { "@type": "Organization", name: BUSINESS.brandName, url: abs("/") },
-          publisher: {
-            "@type": "Organization",
-            name: BUSINESS.brandName,
-            logo: { "@type": "ImageObject", url: abs("/brand/logo-full.png") },
-          },
-          mainEntityOfPage: url,
-        };
+            : {}),
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: page.h1,
+        description: page.description,
+        url,
+        image: images,
+        datePublished: page.kind === "local" ? "2026-11-14" : "2026-11-06",
+        dateModified: page.kind === "local" ? "2026-11-14" : "2026-11-06",
+        author: { "@type": "Organization", name: BUSINESS.brandName, url: abs("/") },
+        publisher: {
+          "@type": "Organization",
+          name: BUSINESS.brandName,
+          logo: { "@type": "ImageObject", url: abs("/brand/logo-full.png") },
+        },
+        mainEntityOfPage: url,
+      };
   const faq = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -247,9 +252,19 @@ export function contentJsonLd(page: ContentPage) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: abs("/") },
+      ...(city
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: `Carpet cleaning in ${city.name}`,
+              item: abs(`/carpet-cleaning/${cityParam(city)}`),
+            },
+          ]
+        : []),
       {
         "@type": "ListItem",
-        position: 2,
+        position: city ? 3 : 2,
         name: page.serviceType ?? page.h1,
         item: url,
       },

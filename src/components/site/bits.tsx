@@ -56,16 +56,20 @@ type AutoVideoProps = Omit<VideoHTMLAttributes<HTMLVideoElement>, "src"> & {
 
 /** Real pixel sizes of our photos, so the browser reserves space before they load (no layout jump). */
 const IMG_SIZES: Record<string, [number, number]> = {
-  "/img/carpet.jpg": [1100, 614],
-  "/img/carpet2.jpg": [800, 800],
-  "/img/gym-loft.jpg": [1600, 893],
-  "/img/hero-low.jpg": [1100, 614],
-  "/img/home.jpg": [1600, 893],
-  "/img/outlet.jpg": [1100, 614],
-  "/img/rug.jpg": [1100, 614],
-  "/img/rug2.jpg": [800, 800],
-  "/img/tile.jpg": [1100, 614],
+  "/img/carpet-cleaning-wand-light-carpet.jpg": [1100, 614],
+  "/img/low-moisture-carpet-cleaning-close-up.jpg": [800, 800],
+  "/img/commercial-gym-floor-cleaning.jpg": [1600, 893],
+  "/img/low-moisture-carpet-cleaning-living-room.jpg": [1100, 614],
+  "/img/clean-carpet-living-room-with-dog.jpg": [1600, 893],
+  "/img/portable-carpet-cleaner-plugged-into-wall-outlet.jpg": [1100, 614],
+  "/img/area-rug-cleaned-in-place.jpg": [1100, 614],
+  "/img/oriental-rug-cleaning-wand.jpg": [800, 800],
+  "/img/tile-and-grout-scrubbing-kitchen-floor.jpg": [1100, 614],
   "/vid/sofa-poster.jpg": [960, 540],
+  "/img/jobs/upholstered-loveseat-before-cleaning-water-stains.jpg": [800, 854],
+  "/img/jobs/upholstered-loveseat-after-cleaning-back.jpg": [786, 750],
+  "/img/jobs/upholstery-stains-close-up-before-cleaning.jpg": [800, 854],
+  "/img/jobs/tufted-loveseat-after-upholstery-cleaning.jpg": [800, 858],
   "/vid/gym-poster.jpg": [960, 540],
 };
 export const imgSize = (src: string | undefined) => {
