@@ -69,11 +69,27 @@ export function leadSource(): string {
   }
 }
 
-const isAdminPath = () =>
-  isBrowser() &&
-  (window.location.pathname.startsWith("/admin") ||
-    // Don't count local development or Lovable's editor preview as real visitors.
-    ["localhost", "127.0.0.1"].includes(window.location.hostname));
+/** Google's and other crawlers' browsers, link previews, speed tests and automated browsers. */
+const BOT_UA =
+  /bot\b|bot\/|crawl|spider|slurp|Googlebot|Google-InspectionTool|GoogleOther|APIs-Google|AdsBot|Mediapartners|Google-Read-Aloud|HeadlessChrome|Lighthouse|PageSpeed|facebookexternalhit|bingpreview|Bytespider|GPTBot|ClaudeBot|PerplexityBot/i;
+
+/** Set in this browser once someone signs in to the back office: their own browsing isn't counted. */
+export const TEAM_DEVICE_KEY = "ss_team_device";
+
+const isAdminPath = () => {
+  if (!isBrowser()) return false;
+  if (window.location.pathname.startsWith("/admin")) return true;
+  // Don't count local development or Lovable's editor preview as real visitors.
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return true;
+  // Don't count robots (e.g. Google loading a page after "Request indexing").
+  if (navigator.webdriver || BOT_UA.test(navigator.userAgent)) return true;
+  try {
+    if (localStorage.getItem(TEAM_DEVICE_KEY)) return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+};
 
 /** Record an event. Never throws; tracking must not break the site. */
 export function track(event: string, label?: string, meta?: Record<string, unknown>) {

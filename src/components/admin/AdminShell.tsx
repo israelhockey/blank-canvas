@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { db, isDbConfigured } from "@/lib/db";
+import { TEAM_DEVICE_KEY } from "@/lib/track";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -60,6 +61,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
       if (error) {
         setErr(error.message);
         return setAccess("error");
+      }
+      if (data === true) {
+        // Team phones and laptops stop counting as website visitors.
+        try {
+          localStorage.setItem(TEAM_DEVICE_KEY, "1");
+        } catch {
+          /* ignore */
+        }
       }
       setAccess(data === true ? "ok" : "not_team");
     };
