@@ -277,3 +277,6 @@ export const CITIES: City[] = [
 /** URL param for a city page, e.g. "keller-tx" → /carpet-cleaning/keller-tx */
 export const cityParam = (c: City) => `${c.slug}-tx`;
 export const findCity = (param: string) => CITIES.find((c) => cityParam(c) === param);
+
+export const BEFORE_WE_ARRIVE =
+  "We clean fabric. We don't do house cleaning or decluttering. Please clear clothes, trash and personal items off furniture and floors before we arrive. If the area isn't cleared, there may be an added charge for the extra prep and cleaning.";

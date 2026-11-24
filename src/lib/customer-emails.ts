@@ -1,4 +1,5 @@
 import { brandedLayout, esc, itemsTable, usd } from "./email";
+import { BEFORE_WE_ARRIVE } from "./site-data";
 
 /* Branded customer emails, shared by the back office and the automatic emails. Server-only. */
 
@@ -31,6 +32,8 @@ export type CustomerEmailData = {
   subject?: string;
   message?: string;
 };
+
+const prepNote = `<p style="margin:16px 0 0;color:#56627a;font-size:14px"><b style="color:#0f1f38">Before we arrive:</b> ${esc(BEFORE_WE_ARRIVE)}</p>`;
 
 export function buildCustomerEmail(kind: CustomerEmailKind, input: CustomerEmailData) {
   const data = {
@@ -67,7 +70,7 @@ export function buildCustomerEmail(kind: CustomerEmailKind, input: CustomerEmail
         origin: data.origin,
         heading: `Hi ${first}, here's your quote`,
         intro: `Quote #${data.number ?? ""}${data.expires ? `, good through ${data.expires}` : ""}. Flat prices, no deposit, and you pay after the job is done.`,
-        body: table + notes,
+        body: table + notes + prepNote,
         cta: { label: "View and accept your quote", href: data.link },
       });
       text = `Hi ${first}, here's your Simple Surface Carpet Cleaning quote #${data.number ?? ""} for ${usd(data.total)}: ${data.link}`;
@@ -141,7 +144,7 @@ export function buildCustomerEmail(kind: CustomerEmailKind, input: CustomerEmail
         origin: data.origin,
         heading: `You're booked, ${first}!`,
         intro: `We'll see you ${data.day}, ${data.window} arrival. No deposit; you pay after the job is done.`,
-        body: table + notes,
+        body: table + notes + prepNote,
       });
       text = `You're booked with Simple Surface: ${data.day}, ${data.window}. Questions: 214-562-3449.`;
       break;

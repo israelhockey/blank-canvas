@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { db } from "@/lib/db";
 import { quoteAccepted } from "@/lib/leads.functions";
-import { ARRIVAL_WINDOWS, BUSINESS, money } from "@/lib/site-data";
+import { ARRIVAL_WINDOWS, BEFORE_WE_ARRIVE, BUSINESS, money } from "@/lib/site-data";
 import { track } from "@/lib/track";
 import siteCss from "@/site.css?url";
 
@@ -164,6 +164,10 @@ function QuotePage() {
       {q.notes && (
         <p style={{ marginTop: 20, whiteSpace: "pre-line", color: "var(--muted)" }}>{q.notes}</p>
       )}
+
+      <p style={{ marginTop: 20, color: "var(--muted)", fontSize: 14 }}>
+        <b>Before we arrive:</b> {BEFORE_WE_ARRIVE}
+      </p>
 
       <div className="book" style={{ marginTop: 28 }}>
         {accepted ? (
