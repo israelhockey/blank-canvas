@@ -304,7 +304,7 @@ export const quoteAccepted = createServerFn({ method: "POST" })
 /* ---------- Quick quote / "send me this price" ---------- */
 
 const quickSchema = z.object({
-  mode: z.enum(["quick", "price", "whatsapp", "guide"]),
+  mode: z.enum(["quick", "price", "whatsapp", "guide", "callback"]),
   address: z.string().trim().max(200).optional().default(""),
   notes: z.string().trim().max(1000).optional().default(""),
   name: z.string().trim().min(2).max(120),
@@ -359,20 +359,24 @@ export const submitQuickLead = createServerFn({ method: "POST" })
           ? "Send me this price (price builder)"
           : data.mode === "whatsapp"
             ? "WhatsApp button (they were sent to WhatsApp to message you)"
-            : "Quick quote",
+            : data.mode === "callback"
+              ? "Call-back button (phone number only)"
+              : "Quick quote",
       ],
       ["Page", data.page],
       ["Came from", data.source],
     ];
     const alert = await sendEmail({
       to: notifyList(),
-      subject: `${data.mode === "price" ? "Price saved" : data.mode === "whatsapp" ? "WhatsApp lead" : "Quick quote"}: ${data.name} (${what}) · call now`,
+      subject: `${data.mode === "price" ? "Price saved" : data.mode === "whatsapp" ? "WhatsApp lead" : data.mode === "callback" ? "Call-back request" : "Quick quote"}: ${data.name} (${what}) · call now`,
       html: alertLayout(
         data.mode === "price"
           ? "Wants this price: call to book"
           : data.mode === "whatsapp"
             ? "WhatsApp lead: check WhatsApp, or call now"
-            : "Quick quote request: call now",
+            : data.mode === "callback"
+              ? "Wants a call back: call now"
+              : "Quick quote request: call now",
         `<table style="border-collapse:collapse;font-size:15px">${detailRows(pairs)}</table>
 <p style="margin-top:20px">${button(`tel:${data.phone.replace(/[^\d+]/g, "")}`, `Call ${data.name}`)}${button(adminLink(customerId), "Open in back office", "#0f1f38")}</p>`,
       ),

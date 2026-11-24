@@ -5,6 +5,7 @@ import { BUSINESS, CITIES, cityParam, money, textUsHref, type City } from "@/lib
 import { CITY_CONTENT } from "@/lib/city-content";
 import { CITY_LOCAL } from "@/lib/city-local";
 import { LOVESEAT_PHOTOS } from "@/lib/local-pages";
+import { CallbackStrip } from "./CallbackStrip";
 import { GUIDES, SERVICE_PAGES, localPagesFor, pagePath } from "@/lib/seo-pages";
 import { ArrowIcon, AutoVideo, BeforeAfter, ClockIcon, LeafIcon, PlugIcon, imgSize } from "./bits";
 import { openQuickLead } from "./QuickLead";
@@ -166,6 +167,7 @@ export function Hero({ city }: { city?: City | undefined }) {
             </p>
           </>
         )}
+        <CallbackStrip variant="dark" />
         <a className="offer-chip" href="#pricing">
           <b>Flat rates</b>
           <span>From $50 a room · No deposit</span>
@@ -976,9 +978,9 @@ export function MobileBar({
       <a className="btn btn-ghost" href={BUSINESS.phoneHref}>
         Call
       </a>
-      <a className="btn btn-ghost" href={textUsHref()}>
-        Text
-      </a>
+      <button className="btn btn-ghost" type="button" onClick={() => openQuickLead("callback")}>
+        Call me back
+      </button>
       {cta ? (
         <a className="btn btn-primary" href={cta.href}>
           {cta.label}

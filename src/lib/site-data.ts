@@ -280,3 +280,6 @@ export const findCity = (param: string) => CITIES.find((c) => cityParam(c) === p
 
 export const BEFORE_WE_ARRIVE =
   "We clean fabric. We don't do house cleaning or decluttering. Please clear clothes, trash and personal items off furniture and floors before we arrive. If the area isn't cleared, there may be an added charge for the extra prep and cleaning.";
+
+/** The promise shown next to the call-back boxes. Only keep it as long as it is true. */
+export const CALLBACK_PROMISE = "We call back the same day.";

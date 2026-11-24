@@ -24,6 +24,7 @@ import { Commercial } from "./Commercial";
 import { Pricing } from "./Pricing";
 import { ExitIntent } from "./ExitIntent";
 import { QuickLead, openQuickLead } from "./QuickLead";
+import { CallbackStrip } from "./CallbackStrip";
 import { FinalCta, Footer, Header, MobileBar, WhatsAppFab } from "./Sections";
 
 function startQuantities(preset?: Quantities): Quantities {
@@ -68,6 +69,7 @@ export function ContentPageView({ page }: { page: ContentPage }) {
               <h1>{page.h1}</h1>
               <p className="lede">{page.intro}</p>
               {page.price && <p className="cp-price">{page.price}</p>}
+              <CallbackStrip variant="light" />
               <div className="cp-ctas">
                 <a className="btn btn-primary" href={page.commercial ? "#commercial" : "#pricing"}>
                   {page.commercial ? "Request a free walkthrough" : "See my price"}
