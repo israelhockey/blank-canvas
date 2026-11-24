@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Empty, PageHeader, Panel, Stat, StatusPill, fmtDate, usd } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { commissionFor, useRefresh, useSettings } from "@/lib/admin-data";
 import { dbOrThrow } from "@/lib/db";
 import type { Commission, Job } from "@/lib/db-types";
@@ -18,6 +19,7 @@ function CommissionPage() {
   const settings = useSettings();
   const refresh = useRefresh();
   const [show, setShow] = useState<"unpaid" | "all">("unpaid");
+  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
   const jobs = useQuery({
     queryKey: ["commission-jobs"],
     queryFn: async () => {
@@ -75,11 +77,40 @@ function CommissionPage() {
     void refresh();
   };
 
+  // Type in what Tom is actually getting paid on a job; it overrides the automatic amount.
+  const saveAmount = async (jobId: string, value: string) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount < 0) {
+      toast.error("Enter a dollar amount");
+      return;
+    }
+    const prev = rows.find((x) => x.job.id === jobId)?.commission;
+    const { error } = await dbOrThrow()
+      .from("commissions")
+      .upsert(
+        {
+          job_id: jobId,
+          amount,
+          basis: "set by hand",
+          status: prev?.status ?? "pending",
+          paid_at: prev?.paid_at ?? null,
+        },
+        { onConflict: "job_id" },
+      );
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setEditing(null);
+    toast.success("Commission updated");
+    void refresh();
+  };
+
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Commission"
-        sub={`Current rule: ${rule.type === "percent" ? `${rule.value}% of the pre-tax job value` : `$${rule.value} flat per job`} on jobs brought in by the partner. Change it in Settings.`}
+        title="Tom's commission"
+        sub={`Current rule: ${rule.type === "percent" ? `${rule.value}% of the pre-tax job value` : `$${rule.value} flat per job`} on jobs brought in by the partner. Change the rule in Settings, or click an amount below to set what Tom gets on that job.`}
         actions={
           unpaid.length ? (
             <Button onClick={() => void markPaid(unpaid.map((r) => r.job.id))}>
@@ -161,7 +192,36 @@ function CommissionPage() {
                       {usd(r.job.final_total ?? r.job.total)}
                     </td>
                     <td className="p-3 text-right font-semibold tabular-nums">
-                      {r.job.sourced_by === "partner" ? usd(r.amount) : "–"}
+                      {r.job.sourced_by !== "partner" ? (
+                        "–"
+                      ) : editing?.id === r.job.id ? (
+                        <form
+                          className="flex items-center justify-end gap-1"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            void saveAmount(r.job.id, editing.value);
+                          }}
+                        >
+                          <Input
+                            autoFocus
+                            inputMode="decimal"
+                            className="h-8 w-24 text-right"
+                            value={editing.value}
+                            onChange={(e) => setEditing({ id: r.job.id, value: e.target.value })}
+                          />
+                          <Button size="sm" type="submit">
+                            Save
+                          </Button>
+                        </form>
+                      ) : (
+                        <button
+                          className="underline decoration-dotted"
+                          title="Click to change the amount"
+                          onClick={() => setEditing({ id: r.job.id, value: String(r.amount) })}
+                        >
+                          {usd(r.amount)}
+                        </button>
+                      )}
                     </td>
                     <td className="p-3">
                       {r.job.sourced_by === "partner" && (
